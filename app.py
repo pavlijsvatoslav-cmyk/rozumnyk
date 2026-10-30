@@ -10,6 +10,14 @@ SHELL = r"""<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f2">
+  <meta name="description" content="Розумник — зрозумілі навчальні теми, приклади, вправи й контрольні для учнів 5–9 класів.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="uk_UA">
+  <meta property="og:site_name" content="Розумник">
+  <meta property="og:title" content="{{ title }} · Розумник">
+  <meta property="og:description" content="Навчайся у своєму темпі: уроки, приклади й перевірка знань для 5–9 класів.">
+  <meta name="twitter:card" content="summary">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <title>{{ title }} · Розумник</title>
   <style>
     :root{--ink:#1d2939;--muted:#6b7785;--paper:#f7f7f2;--white:#fff;--green:#4d7465;--green-dark:#34594c;--lime:#c7e5b1;--peach:#ffd2b7;--yellow:#f5d879;--line:#e9e9e0;--shadow:0 18px 50px #2433280c}
