@@ -138,10 +138,81 @@ SHELL = r"""<!doctype html>
   </header>
   <main>{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
-  <script src="https://unpkg.com/lenis@1.3.27/dist/lenis.min.js"></script>
   <script>
-    document.documentElement.classList.add('js');
-    if(window.Lenis&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const smoothScroll=new Lenis({autoRaf:true,anchors:true,respectReducedMotion:true});const motionArt=document.querySelector('.editorial-art');if(motionArt)smoothScroll.on('scroll',event=>{const currentScroll=Number(event.scroll??smoothScroll.scroll)||0;motionArt.style.setProperty('--scroll-lift',Math.max(-16,Math.min(8,currentScroll*-.018))+'px')})}
+    const studentCanvas=document.querySelector('#student-scene');
+    if(studentCanvas){
+      const fallback=document.querySelector('.student-fallback');
+      const renderStudent=(THREE)=>{try{
+        const stage=studentCanvas.parentElement;
+        const scene=new THREE.Scene();
+        const camera=new THREE.PerspectiveCamera(33,1,.1,100);
+        camera.position.set(0,1.8,7.7);camera.lookAt(0,1.45,0);
+        const renderer=new THREE.WebGLRenderer({canvas:studentCanvas,alpha:true,antialias:true,powerPreference:'low-power'});
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.7));renderer.setClearColor(0x000000,0);renderer.outputColorSpace=THREE.SRGBColorSpace;
+        scene.add(new THREE.HemisphereLight(0xdceaff,0x20251d,1.25));
+        const keyLight=new THREE.DirectionalLight(0xffefcf,2.1);keyLight.position.set(-3,5,5);scene.add(keyLight);
+        const rimLight=new THREE.PointLight(0xb8f26a,2.4,8);rimLight.position.set(2.2,3.2,-1.2);scene.add(rimLight);
+        const blueLight=new THREE.PointLight(0x628cff,1.5,7);blueLight.position.set(-3,1.5,2);scene.add(blueLight);
+        const mat=(color,roughness=.72,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+        const skin=mat(0xe5ad83),hair=mat(0x30231f),hoodie=mat(0x68834d),hoodieDark=mat(0x465e39),trousers=mat(0x26344a),shoe=mat(0xe7e6dc),book=mat(0x3268d5,.38),pages=mat(0xf4edd9),ink=mat(0x24231e);
+        const student=new THREE.Group();scene.add(student);
+        function sphere(parent,material,position,scale){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);mesh.position.set(...position);mesh.scale.set(...scale);parent.add(mesh);return mesh}
+        function box(parent,material,position,size){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.position.set(...position);parent.add(mesh);return mesh}
+        function segment(parent,material,a,b,radius){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start),length=delta.length();const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius*.94,radius,length,14),material);mesh.position.copy(start.clone().add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);sphere(parent,material,a,[radius,radius,radius]);sphere(parent,material,b,[radius,radius,radius]);return mesh}
+        // Shoes and legs
+        for(const side of [-1,1]){
+          const x=side*.19;
+          box(student,shoe,[x,.14,.17],[.35,.18,.52]);
+          segment(student,trousers,[x,1.03,0],[x-side*.025,.48,.03],.16);
+          segment(student,trousers,[x-side*.025,.52,.03],[x,.2,.08],.145);
+          sphere(student,hoodieDark,[x,1.05,0],[.2,.12,.2]);
+        }
+        // Torso, neck and head
+        const torso=new THREE.Mesh(new THREE.CylinderGeometry(.39,.48,.9,24,1),hoodie);torso.position.set(0,1.47,0);student.add(torso);
+        sphere(student,hoodie,[0,1.91,0],[.4,.17,.4]);sphere(student,hoodieDark,[0,1.04,.015],[.46,.18,.43]);
+        segment(student,skin,[0,1.88,0],[0,2.1,0],.16);
+        sphere(student,skin,[0,2.43,.02],[.36,.43,.34]);
+        sphere(student,hair,[0,2.68,-.035],[.37,.24,.35]);
+        sphere(student,hair,[-.28,2.55,.12],[.14,.25,.25]);
+        sphere(student,hair,[.24,2.63,.18],[.16,.2,.2]);
+        for(const x of [-.125,.125]){
+          sphere(student,shoe,[x,2.46,.332],[.047,.054,.027]);
+          sphere(student,ink,[x,2.455,.354],[.019,.025,.014]);
+        }
+        const smileCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.085,2.29,.333),new THREE.Vector3(0,2.255,.35),new THREE.Vector3(.085,2.29,.333)]);
+        const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,12,.012,6,false),ink);student.add(smile);
+        sphere(student,skin,[-.355,2.4,.01],[.07,.1,.07]);sphere(student,skin,[.355,2.4,.01],[.07,.1,.07]);
+        // Arms: one supports the book, the other waves above the shoulder.
+        segment(student,hoodie,[-.34,1.76,0],[-.57,1.47,.17],.15);
+        segment(student,hoodie,[-.57,1.47,.17],[-.3,1.34,.4],.125);
+        sphere(student,skin,[-.28,1.35,.44],[.13,.12,.09]);
+        box(student,book,[-.02,1.42,.43],[.55,.68,.13]);
+        box(student,pages,[-.02,1.42,.505],[.47,.58,.025]);
+        box(student,book,[-.02,1.42,.526],[.035,.6,.012]);
+        box(student,mat(0xf2c85c),[.13,1.42,.539],[.014,.42,.01]);
+        const waveArm=new THREE.Group();waveArm.position.set(.34,1.76,0);waveArm.rotation.z=-.62;student.add(waveArm);
+        segment(waveArm,hoodie,[0,0,0],[.03,.39,0],.15);
+        const elbow=[.03,.39,0];
+        segment(waveArm,skin,elbow,[.08,.75,.02],.115);
+        const palm=sphere(waveArm,skin,[.09,.86,.03],[.14,.17,.09]);
+        for(let i=0;i<4;i++){
+          const x=.01+i*.055;
+          segment(waveArm,skin,[x,.94,.035],[x-.018,1.12-(Math.abs(1.5-i)*.025),.04],.027);
+        }
+        segment(waveArm,skin,[.19,.86,.04],[.27,.97,.04],.032);
+        // Floating orbital rings and a soft floor shadow ground the figure in the 3D scene.
+        const ringA=new THREE.Mesh(new THREE.TorusGeometry(1.7,.012,8,120),new THREE.MeshBasicMaterial({color:0x9ccf60,transparent:true,opacity:.58}));ringA.position.set(0,1.48,-.72);ringA.rotation.set(1.08,.12,-.22);scene.add(ringA);
+        const ringB=new THREE.Mesh(new THREE.TorusGeometry(2.05,.008,8,120),new THREE.MeshBasicMaterial({color:0x7699d9,transparent:true,opacity:.25}));ringB.position.set(0,1.48,-.9);ringB.rotation.set(.98,-.2,.18);scene.add(ringB);
+        const floor=new THREE.Mesh(new THREE.CircleGeometry(1.2,48),new THREE.MeshBasicMaterial({color:0x334520,transparent:true,opacity:.16}));floor.rotation.x=-Math.PI/2;floor.position.set(0,.025,0);floor.scale.set(1.35,.55,1);scene.add(floor);
+        const starPositions=new Float32Array(300*3);for(let i=0;i<300;i++){starPositions[i*3]=(Math.random()-.5)*7;starPositions[i*3+1]=Math.random()*4.5;starPositions[i*3+2]=-1.4-Math.random()*3}const starGeometry=new THREE.BufferGeometry();starGeometry.setAttribute('position',new THREE.BufferAttribute(starPositions,3));const stars=new THREE.Points(starGeometry,new THREE.PointsMaterial({color:0xb9c9dc,size:.018,transparent:true,opacity:.75,sizeAttenuation:true}));scene.add(stars);
+        function resizeStudent(){const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+        const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        resizeStudent();window.addEventListener('resize',()=>{resizeStudent();if(reduceMotion)renderer.render(scene,camera)});
+        function drawStudent(time=0){if(!reduceMotion){waveArm.rotation.z=-.62+Math.sin(time*.004)*.22;student.rotation.y=Math.sin(time*.00055)*.045;ringA.rotation.z=-.22+time*.000045;ringB.rotation.z=.18-time*.000025;stars.rotation.y=Math.sin(time*.00012)*.035}renderer.render(scene,camera);if(!reduceMotion)requestAnimationFrame(drawStudent)}
+        requestAnimationFrame(drawStudent);
+      }catch(error){studentCanvas.hidden=true;if(fallback)fallback.hidden=false}};
+      import('https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js').then(renderStudent).catch(()=>{studentCanvas.hidden=true;if(fallback)fallback.hidden=false});
+    }
     const KEY='rozumnyk-completed-lessons-v1';
     const BOOKMARK_KEY='rozumnyk-bookmarks-v1', NOTES_KEY='rozumnyk-notes-v1', MISTAKES_KEY='rozumnyk-mistakes-v1', PLAN_KEY='rozumnyk-week-plan-v1', ACTIVITY_KEY='rozumnyk-activity-v1';
     function readDone(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
@@ -167,7 +238,7 @@ SHELL = r"""<!doctype html>
     const toolRoot=document.querySelector('[data-learning-tools]');if(toolRoot){const grade=toolRoot.dataset.grade;fetch('/study-items?grade='+encodeURIComponent(grade)).then(r=>r.json()).then(items=>initLearningTools(toolRoot,items)).catch(()=>{toolRoot.innerHTML='<p>Не вдалося завантажити список тем. Онови сторінку.</p>'})}
     function initLearningTools(root,items){const planKey=PLAN_KEY+":"+root.dataset.grade;const esc=s=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));const bookmarks=readStore(BOOKMARK_KEY,[]),notes=readStore(NOTES_KEY,{}),misses=readStore(MISTAKES_KEY,[]),done=readDone();const bookmarkBox=root.querySelector('[data-bookmark-list]');bookmarkBox.innerHTML=bookmarks.length?bookmarks.map(b=>'<div class="tool-item"><a href="'+esc(b.href)+'">'+esc(b.title)+'</a> <button type="button" data-remove-bookmark="'+esc(b.key)+'">Прибрати</button></div>').join(''):'<p>Закладок поки немає. Додавай їх на сторінці уроку.</p>';root.querySelectorAll('[data-remove-bookmark]').forEach(b=>b.onclick=()=>{saveStore(BOOKMARK_KEY,readStore(BOOKMARK_KEY,[]).filter(x=>x.key!==b.dataset.removeBookmark));location.reload()});const notesBox=root.querySelector('[data-note-list]');const noteItems=Object.entries(notes).filter(([,v])=>v.trim());notesBox.innerHTML=noteItems.length?noteItems.map(([k,v])=>{const item=items.find(x=>x.key===k);return '<div class="tool-item"><a href="'+esc(item?.href||'#')+'">'+esc(item?.title||k)+'</a><p>'+esc(v)+'</p></div>'}).join(''):'<p>Нотаток поки немає. Залиш нотатку в уроці.</p>';const mistakeBox=root.querySelector('[data-mistake-list]');mistakeBox.innerHTML=misses.length?misses.map((m,i)=>{const item=items.find(x=>x.key===m.key),related=items.filter(x=>item&&x.slug===item.slug&&x.key!==m.key).slice(0,2);return '<div class="tool-item" data-review-card="'+i+'"><p><strong>'+esc(m.question)+'</strong></p><form data-review-form="'+i+'">'+m.options.map((o,j)=>'<label><input type="radio" name="r'+i+'" value="'+j+'" required> '+esc(o)+'</label><br>').join('')+'<button type="submit">Перевірити відповідь</button></form><p data-review-feedback></p><a href="'+esc(m.href)+'">Повернутися до теми й пройти контрольну →</a><p>Схожі теми предмета: '+related.map(x=>'<a href="'+esc(x.href)+'">'+esc(x.title)+'</a>').join(' · ')+'</p><button type="button" data-remove-mistake="'+esc(m.id)+'">Прибрати з повторення</button></div>'}).join(''):'<p>Помилок для повторення ще немає. Вони з’являться після контрольної, якщо відповідь буде неправильною.</p>';root.querySelectorAll('[data-review-form]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const miss=misses[Number(form.dataset.reviewForm)],answer=Number(new FormData(form).values().next().value),feedback=form.parentElement.querySelector('[data-review-feedback]');if(answer===miss.correct){feedback.textContent='Правильно! Це питання прибрано з черги повторення.';saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==miss.id));setTimeout(()=>location.reload(),900)}else feedback.textContent='Спробуй ще раз. Перечитай пояснення в темі за посиланням нижче.'});root.querySelectorAll('[data-remove-mistake]').forEach(b=>b.onclick=()=>{saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==b.dataset.removeMistake));location.reload()});const streakBox=root.querySelector('[data-achievement-list]');const activity=readStore(ACTIVITY_KEY,{days:[]});let streak=0;const d=new Date();for(;;){const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(!activity.days.includes(key))break;streak++;d.setDate(d.getDate()-1)}const badges=[{n:1,t:'Перший крок',ok:done.length>=1},{n:10,t:'Десять тем',ok:done.length>=10},{n:50,t:'Дослідник',ok:done.length>=50},{n:100,t:'Майстер навчання',ok:done.length>=100},{n:3,t:'Три дні поспіль',ok:streak>=3},{n:7,t:'Тиждень регулярності',ok:streak>=7}];streakBox.innerHTML='<p><strong>'+streak+'</strong> дн. поспіль · <strong>'+done.length+'</strong> тем завершено</p>'+badges.map(x=>'<div class="tool-item">'+(x.ok?'🏅':'🔒')+' '+x.t+(x.ok?' — отримано':' — ціль: '+x.n)+'</div>').join('');const form=root.querySelector('[data-plan-form]');const selection=root.querySelector('[data-plan-subjects]');selection.innerHTML=[...new Map(items.map(x=>[x.slug,x.subject]))].entries().map(([slug,name])=>'<label><input type="checkbox" value="'+esc(slug)+'" checked> '+esc(name)+'</label>').join('');const saved=readStore(planKey,null);if(saved){form.elements.days.value=saved.days;form.elements.minutes.value=saved.minutes;selection.querySelectorAll('input').forEach(x=>x.checked=saved.subjects.includes(x.value));renderPlan(saved)}function renderPlan(p){const selected=items.filter(x=>p.subjects.includes(x.slug));const count=Math.min(selected.length,Math.max(1,Number(p.days)||5));const plan=Array.from({length:count},(_,i)=>selected[(i*3)%selected.length]).filter(Boolean);root.querySelector('[data-plan-output]').innerHTML=plan.map((x,i)=>'<div class="tool-item"><strong>День '+(i+1)+' · '+esc(p.minutes)+' хв</strong><br><a href="'+esc(x.href)+'">'+esc(x.subject)+' — '+esc(x.title)+'</a></div>').join('')||'<p>Обери хоча б один предмет для плану.</p>'}form.onsubmit=e=>{e.preventDefault();const p={days:Number(form.elements.days.value)||5,minutes:Number(form.elements.minutes.value)||20,subjects:[...selection.querySelectorAll('input:checked')].map(x=>x.value)};saveStore(planKey,p);renderPlan(p)}}
     paintProgress();
-    if('IntersectionObserver'in window){const ob=new IntersectionObserver(items=>items.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ob.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>ob.observe(x))}else document.querySelectorAll('.reveal').forEach(x=>x.classList.add('visible'))
+    if('IntersectionObserver'in window){const ob=new IntersectionObserver(items=>items.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ob.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>ob.observe(x))}
     if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){document.querySelectorAll('.subject-card,.tool-card,.career-card,.career-result,.career-path,.progress-card').forEach(card=>{card.addEventListener('pointermove',event=>{const rect=card.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width-.5,y=(event.clientY-rect.top)/rect.height-.5;card.style.setProperty('--tilt-x',(x*5).toFixed(2)+'deg');card.style.setProperty('--tilt-y',(-y*5).toFixed(2)+'deg')});card.addEventListener('pointerleave',()=>{card.style.setProperty('--tilt-x','0deg');card.style.setProperty('--tilt-y','0deg')})})}
   </script>
 </body>
@@ -205,48 +276,28 @@ def index():
     grade = active_grade()
     subjects = GRADES[grade]
     lesson_count = sum(len(item["lessons"]) for item in subjects)
-    class_summaries = [
-        {
-            "grade": class_number,
-            "subject_count": len(GRADES[class_number]),
-            "lesson_count": sum(len(subject["lessons"]) for subject in GRADES[class_number]),
-            "href": url_for("index", grade=class_number),
-        }
-        for class_number in sorted(GRADES)
-    ]
     return show_page(
         "Головна",
         """
-        <section class="editorial-hero">
-          <div class="hero-copy">
-            <h1>Знання<br>рухають<br><em>уперед.</em></h1>
-            <p class="intro">Уроки, приклади й контрольні для 5–11 класів. Обирай свій темп, досліджуй предмети та дивись, як зростає твій прогрес.</p>
-            <a class="button hero-cta" href="#classes">Обрати клас <span>↓</span></a>
-            <div class="hero-meta"><span><strong>{{ subjects|length }}</strong> предметів у {{ grade }} класі</span><span><strong data-total-done>0</strong> тем завершено</span></div>
+        <section class="hero student-hero">
+          <div class="student-copy">
+            <h1>Привіт,<br>досліднику!</h1>
+            <p class="intro">Займай своє місце в першому ряду. Тут кожна тема стає зрозумілою пригодою — крок за кроком, у твоєму темпі.</p>
+            <a class="button student-cta" href="#subjects">Почати навчання <span>↓</span></a>
+            <div class="stats"><span><strong>{{ subjects|length }}</strong> предметів у {{ grade }} класі</span><span><strong>{{ lesson_count }}</strong> тем для відкриття</span><span><strong data-total-done>0</strong> уже пройдено</span></div>
+            {% if grade == 11 %}<p class="student-nmt">Окрема підготовка до НМТ — у темах 11 класу.</p>{% endif %}
           </div>
-          <div class="editorial-art" aria-hidden="true">
-            <div class="art-halo halo-back"></div><div class="art-halo halo-front"></div>
-            <div class="art-cube"><span class="cube-face cube-front">Р</span><span class="cube-face cube-side"></span><span class="cube-face cube-top"></span></div>
-            <div class="art-tag tag-top">ЗРОЗУМІЛО</div><div class="art-tag tag-bottom">КРОК ЗА КРОКОМ</div>
-            <span class="art-orbit-label">5—11 / UA</span>
+          <div class="student-stage" role="img" aria-label="Анімований 3D-учень махає рукою та тримає синю книжку">
+            <canvas id="student-scene" aria-hidden="true"></canvas>
+            <div class="student-fallback" hidden><span class="fallback-student">🧑‍🎓</span><span class="fallback-wave">👋</span><span class="fallback-book">📘</span></div>
+            <span class="student-stage-caption" aria-hidden="true">РОЗУМНИК <i>·</i> ПРИВІТ, СВІТ!</span>
           </div>
-        </section>
-        <section class="grade-select reveal" id="classes" aria-labelledby="grade-heading">
-          <div class="grade-heading"><div><p class="eyebrow">ТВОЯ НАВЧАЛЬНА ТРАЄКТОРІЯ</p><h2 id="grade-heading">Спершу — клас.</h2></div><p>Обери рік навчання<br>та відкрий свої предмети.</p></div>
-          <nav class="grade-ribbon" aria-label="Обрати клас">
-            {% for school_class in class_summaries %}
-            <a class="grade-tile {{ 'active' if grade == school_class.grade else '' }}" href="{{ school_class.href }}" aria-label="{{ school_class.grade }} клас: {{ school_class.subject_count }} предметів, {{ school_class.lesson_count }} тем">
-              <span class="grade-number">{{ '%02d'|format(school_class.grade) }}</span><span class="grade-detail">КЛАС <i>↗</i></span>
-            </a>
-            {% endfor %}
-          </nav>
-          <div class="grade-current"><span>ЗАРАЗ ВІДКРИТО</span><strong>{{ grade }} КЛАС</strong><span>{{ subjects|length }} предметів · {{ lesson_count }} тем</span></div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
         <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
         <div class="topic-tools"><input class="topic-search" type="search" placeholder="Пошук предмета…" aria-label="Пошук предмета" data-subject-search></div>
-        <div class="section-head reveal" id="subjects"><div><p class="eyebrow">ТВОЯ ПРОГРАМА · {{ grade }} КЛАС</p><h2>Куди рухаємося?</h2></div><p>Предмети й усі їхні теми →</p></div>
-        <section class="subject-grid reveal">
+        <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
+        <section class="subject-grid">
           {% for subject in subjects %}
           <a class="subject-card" data-subject-card data-subject-title="{{ subject.name|lower }}" style="--i:{{ loop.index0 }}" href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">
             <div class="card-head"><span class="subject-icon">{{ subject.icon }}</span><span class="arrow">↗</span></div>
