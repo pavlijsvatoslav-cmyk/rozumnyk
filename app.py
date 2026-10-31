@@ -202,18 +202,39 @@ def index():
     grade = active_grade()
     subjects = GRADES[grade]
     lesson_count = sum(len(item["lessons"]) for item in subjects)
+    class_summaries = [
+        {
+            "grade": class_number,
+            "subject_count": len(GRADES[class_number]),
+            "lesson_count": sum(len(subject["lessons"]) for subject in GRADES[class_number]),
+            "href": url_for("index", grade=class_number),
+        }
+        for class_number in sorted(GRADES)
+    ]
     return show_page(
         "Головна",
         """
-        <section class="hero">
-          <div>
-            <p class="eyebrow">ПРИВІТ, ДОСЛІДНИКУ!</p>
-            <h1>Навчайся.<br><em>Відкривай.</em><br>Зростай.</h1>
-            <p class="intro">{% if grade == 11 %}Твій простір для підготовки до НМТ: систематизуй теми, тренуй тестові завдання й відстежуй прогрес.{% else %}Твій дружній навчальний простір для {{ grade }} класу. Обирай тему, розбирайся крок за кроком і перевіряй себе.{% endif %}</p>
-            <a class="button" href="#subjects">Знайти свій предмет <span>↘</span></a>
-            <div class="stats"><span><strong>{{ subjects|length }}</strong> навчальних напрямів</span><span><strong>{{ lesson_count }}</strong> тем для дослідження</span><span><strong data-total-done>0</strong> уже опрацьовано</span></div>
+        <section class="cosmos-hero">
+          <div class="cosmos-copy">
+            <p class="eyebrow">✦ ТВОЯ НАВЧАЛЬНА ГАЛАКТИКА</p>
+            <h1>Досліджуй.<br><em>Відкривай.</em><br>Зростай.</h1>
+            <p class="intro">Обери клас-планету й вирушай до всіх його предметів, тем, уроків і контрольних. Навчайся у своєму темпі та стеж за прогресом.</p>
+            <a class="button" href="#subjects">До предметів {{ grade }} класу <span>↘</span></a>
+            <div class="stats"><span><strong>{{ subjects|length }}</strong> предметів</span><span><strong>{{ lesson_count }}</strong> тем у класі</span><span><strong data-total-done>0</strong> опрацьовано</span></div>
+            {% if grade == 11 %}<p class="cosmos-nmt">🚀 У 11 класі доступний окремий фокус на підготовці до НМТ.</p>{% endif %}
           </div>
-          <div class="hero-visual" aria-hidden="true"><div class="hero-stage"><div class="hero-pedestal"></div><div class="hero-cube"><span class="hero-cube-face front">📚</span><span class="hero-cube-face back">✦</span><span class="hero-cube-face right">✏️</span><span class="hero-cube-face left">🔭</span><span class="hero-cube-face top">💡</span><span class="hero-cube-face bottom">🧩</span></div><div class="orbit"></div><div class="orbit orbit-tilt"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div></div>
+          <div class="solar-system" aria-label="Сонячна система класів">
+            <div class="space-stars" aria-hidden="true"></div>
+            <div class="orbit-ring ring-one" aria-hidden="true"></div><div class="orbit-ring ring-two" aria-hidden="true"></div><div class="orbit-ring ring-three" aria-hidden="true"></div>
+            <div class="sun-core" aria-hidden="true"><span>✦</span><small>РОЗУМНИК</small></div>
+            {% for school_class in class_summaries %}
+            <a class="class-planet planet-{{ school_class.grade }} {{ 'selected' if grade == school_class.grade else '' }}" href="{{ school_class.href }}" aria-label="Відкрити {{ school_class.grade }} клас: {{ school_class.subject_count }} предметів, {{ school_class.lesson_count }} тем" title="{{ school_class.grade }} клас · {{ school_class.subject_count }} предметів · {{ school_class.lesson_count }} тем">
+              <span class="planet-face"><b>{{ school_class.grade }}</b><small>КЛАС</small></span>
+              <span class="planet-label">{{ school_class.grade }} клас</span>
+            </a>
+            {% endfor %}
+            <span class="space-caption">ОБЕРИ СВОЮ ПЛАНЕТУ</span>
+          </div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
         <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
@@ -233,6 +254,7 @@ def index():
         subjects=subjects,
         grade=grade,
         lesson_count=lesson_count,
+        class_summaries=class_summaries,
     )
 
 
