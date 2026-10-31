@@ -138,7 +138,10 @@ SHELL = r"""<!doctype html>
   </header>
   <main>{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
+  <script src="https://unpkg.com/lenis@1.3.27/dist/lenis.min.js"></script>
   <script>
+    document.documentElement.classList.add('js');
+    if(window.Lenis&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const smoothScroll=new Lenis({autoRaf:true,anchors:true,respectReducedMotion:true});const motionArt=document.querySelector('.editorial-art');if(motionArt)smoothScroll.on('scroll',event=>{const currentScroll=Number(event.scroll??smoothScroll.scroll)||0;motionArt.style.setProperty('--scroll-lift',Math.max(-16,Math.min(8,currentScroll*-.018))+'px')})}
     const KEY='rozumnyk-completed-lessons-v1';
     const BOOKMARK_KEY='rozumnyk-bookmarks-v1', NOTES_KEY='rozumnyk-notes-v1', MISTAKES_KEY='rozumnyk-mistakes-v1', PLAN_KEY='rozumnyk-week-plan-v1', ACTIVITY_KEY='rozumnyk-activity-v1';
     function readDone(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
@@ -164,7 +167,7 @@ SHELL = r"""<!doctype html>
     const toolRoot=document.querySelector('[data-learning-tools]');if(toolRoot){const grade=toolRoot.dataset.grade;fetch('/study-items?grade='+encodeURIComponent(grade)).then(r=>r.json()).then(items=>initLearningTools(toolRoot,items)).catch(()=>{toolRoot.innerHTML='<p>Не вдалося завантажити список тем. Онови сторінку.</p>'})}
     function initLearningTools(root,items){const planKey=PLAN_KEY+":"+root.dataset.grade;const esc=s=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));const bookmarks=readStore(BOOKMARK_KEY,[]),notes=readStore(NOTES_KEY,{}),misses=readStore(MISTAKES_KEY,[]),done=readDone();const bookmarkBox=root.querySelector('[data-bookmark-list]');bookmarkBox.innerHTML=bookmarks.length?bookmarks.map(b=>'<div class="tool-item"><a href="'+esc(b.href)+'">'+esc(b.title)+'</a> <button type="button" data-remove-bookmark="'+esc(b.key)+'">Прибрати</button></div>').join(''):'<p>Закладок поки немає. Додавай їх на сторінці уроку.</p>';root.querySelectorAll('[data-remove-bookmark]').forEach(b=>b.onclick=()=>{saveStore(BOOKMARK_KEY,readStore(BOOKMARK_KEY,[]).filter(x=>x.key!==b.dataset.removeBookmark));location.reload()});const notesBox=root.querySelector('[data-note-list]');const noteItems=Object.entries(notes).filter(([,v])=>v.trim());notesBox.innerHTML=noteItems.length?noteItems.map(([k,v])=>{const item=items.find(x=>x.key===k);return '<div class="tool-item"><a href="'+esc(item?.href||'#')+'">'+esc(item?.title||k)+'</a><p>'+esc(v)+'</p></div>'}).join(''):'<p>Нотаток поки немає. Залиш нотатку в уроці.</p>';const mistakeBox=root.querySelector('[data-mistake-list]');mistakeBox.innerHTML=misses.length?misses.map((m,i)=>{const item=items.find(x=>x.key===m.key),related=items.filter(x=>item&&x.slug===item.slug&&x.key!==m.key).slice(0,2);return '<div class="tool-item" data-review-card="'+i+'"><p><strong>'+esc(m.question)+'</strong></p><form data-review-form="'+i+'">'+m.options.map((o,j)=>'<label><input type="radio" name="r'+i+'" value="'+j+'" required> '+esc(o)+'</label><br>').join('')+'<button type="submit">Перевірити відповідь</button></form><p data-review-feedback></p><a href="'+esc(m.href)+'">Повернутися до теми й пройти контрольну →</a><p>Схожі теми предмета: '+related.map(x=>'<a href="'+esc(x.href)+'">'+esc(x.title)+'</a>').join(' · ')+'</p><button type="button" data-remove-mistake="'+esc(m.id)+'">Прибрати з повторення</button></div>'}).join(''):'<p>Помилок для повторення ще немає. Вони з’являться після контрольної, якщо відповідь буде неправильною.</p>';root.querySelectorAll('[data-review-form]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const miss=misses[Number(form.dataset.reviewForm)],answer=Number(new FormData(form).values().next().value),feedback=form.parentElement.querySelector('[data-review-feedback]');if(answer===miss.correct){feedback.textContent='Правильно! Це питання прибрано з черги повторення.';saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==miss.id));setTimeout(()=>location.reload(),900)}else feedback.textContent='Спробуй ще раз. Перечитай пояснення в темі за посиланням нижче.'});root.querySelectorAll('[data-remove-mistake]').forEach(b=>b.onclick=()=>{saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==b.dataset.removeMistake));location.reload()});const streakBox=root.querySelector('[data-achievement-list]');const activity=readStore(ACTIVITY_KEY,{days:[]});let streak=0;const d=new Date();for(;;){const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(!activity.days.includes(key))break;streak++;d.setDate(d.getDate()-1)}const badges=[{n:1,t:'Перший крок',ok:done.length>=1},{n:10,t:'Десять тем',ok:done.length>=10},{n:50,t:'Дослідник',ok:done.length>=50},{n:100,t:'Майстер навчання',ok:done.length>=100},{n:3,t:'Три дні поспіль',ok:streak>=3},{n:7,t:'Тиждень регулярності',ok:streak>=7}];streakBox.innerHTML='<p><strong>'+streak+'</strong> дн. поспіль · <strong>'+done.length+'</strong> тем завершено</p>'+badges.map(x=>'<div class="tool-item">'+(x.ok?'🏅':'🔒')+' '+x.t+(x.ok?' — отримано':' — ціль: '+x.n)+'</div>').join('');const form=root.querySelector('[data-plan-form]');const selection=root.querySelector('[data-plan-subjects]');selection.innerHTML=[...new Map(items.map(x=>[x.slug,x.subject]))].entries().map(([slug,name])=>'<label><input type="checkbox" value="'+esc(slug)+'" checked> '+esc(name)+'</label>').join('');const saved=readStore(planKey,null);if(saved){form.elements.days.value=saved.days;form.elements.minutes.value=saved.minutes;selection.querySelectorAll('input').forEach(x=>x.checked=saved.subjects.includes(x.value));renderPlan(saved)}function renderPlan(p){const selected=items.filter(x=>p.subjects.includes(x.slug));const count=Math.min(selected.length,Math.max(1,Number(p.days)||5));const plan=Array.from({length:count},(_,i)=>selected[(i*3)%selected.length]).filter(Boolean);root.querySelector('[data-plan-output]').innerHTML=plan.map((x,i)=>'<div class="tool-item"><strong>День '+(i+1)+' · '+esc(p.minutes)+' хв</strong><br><a href="'+esc(x.href)+'">'+esc(x.subject)+' — '+esc(x.title)+'</a></div>').join('')||'<p>Обери хоча б один предмет для плану.</p>'}form.onsubmit=e=>{e.preventDefault();const p={days:Number(form.elements.days.value)||5,minutes:Number(form.elements.minutes.value)||20,subjects:[...selection.querySelectorAll('input:checked')].map(x=>x.value)};saveStore(planKey,p);renderPlan(p)}}
     paintProgress();
-    if('IntersectionObserver'in window){const ob=new IntersectionObserver(items=>items.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ob.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>ob.observe(x))}
+    if('IntersectionObserver'in window){const ob=new IntersectionObserver(items=>items.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ob.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>ob.observe(x))}else document.querySelectorAll('.reveal').forEach(x=>x.classList.add('visible'))
     if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){document.querySelectorAll('.subject-card,.tool-card,.career-card,.career-result,.career-path,.progress-card').forEach(card=>{card.addEventListener('pointermove',event=>{const rect=card.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width-.5,y=(event.clientY-rect.top)/rect.height-.5;card.style.setProperty('--tilt-x',(x*5).toFixed(2)+'deg');card.style.setProperty('--tilt-y',(-y*5).toFixed(2)+'deg')});card.addEventListener('pointerleave',()=>{card.style.setProperty('--tilt-x','0deg');card.style.setProperty('--tilt-y','0deg')})})}
   </script>
 </body>
@@ -214,33 +217,36 @@ def index():
     return show_page(
         "Головна",
         """
-        <section class="cosmos-hero">
-          <div class="cosmos-copy">
-            <p class="eyebrow">✦ ТВОЯ НАВЧАЛЬНА ГАЛАКТИКА</p>
-            <h1>Досліджуй.<br><em>Відкривай.</em><br>Зростай.</h1>
-            <p class="intro">Обери клас-планету й вирушай до всіх його предметів, тем, уроків і контрольних. Навчайся у своєму темпі та стеж за прогресом.</p>
-            <a class="button" href="#subjects">До предметів {{ grade }} класу <span>↘</span></a>
-            <div class="stats"><span><strong>{{ subjects|length }}</strong> предметів</span><span><strong>{{ lesson_count }}</strong> тем у класі</span><span><strong data-total-done>0</strong> опрацьовано</span></div>
-            {% if grade == 11 %}<p class="cosmos-nmt">🚀 У 11 класі доступний окремий фокус на підготовці до НМТ.</p>{% endif %}
+        <section class="editorial-hero">
+          <div class="hero-copy">
+            <h1>Знання<br>рухають<br><em>уперед.</em></h1>
+            <p class="intro">Уроки, приклади й контрольні для 5–11 класів. Обирай свій темп, досліджуй предмети та дивись, як зростає твій прогрес.</p>
+            <a class="button hero-cta" href="#classes">Обрати клас <span>↓</span></a>
+            <div class="hero-meta"><span><strong>{{ subjects|length }}</strong> предметів у {{ grade }} класі</span><span><strong data-total-done>0</strong> тем завершено</span></div>
           </div>
-          <div class="solar-system" aria-label="Сонячна система класів">
-            <div class="space-stars" aria-hidden="true"></div>
-            <div class="orbit-ring ring-one" aria-hidden="true"></div><div class="orbit-ring ring-two" aria-hidden="true"></div><div class="orbit-ring ring-three" aria-hidden="true"></div>
-            <div class="sun-core" aria-hidden="true"><span>✦</span><small>РОЗУМНИК</small></div>
+          <div class="editorial-art" aria-hidden="true">
+            <div class="art-halo halo-back"></div><div class="art-halo halo-front"></div>
+            <div class="art-cube"><span class="cube-face cube-front">Р</span><span class="cube-face cube-side"></span><span class="cube-face cube-top"></span></div>
+            <div class="art-tag tag-top">ЗРОЗУМІЛО</div><div class="art-tag tag-bottom">КРОК ЗА КРОКОМ</div>
+            <span class="art-orbit-label">5—11 / UA</span>
+          </div>
+        </section>
+        <section class="grade-select reveal" id="classes" aria-labelledby="grade-heading">
+          <div class="grade-heading"><div><p class="eyebrow">ТВОЯ НАВЧАЛЬНА ТРАЄКТОРІЯ</p><h2 id="grade-heading">Спершу — клас.</h2></div><p>Обери рік навчання<br>та відкрий свої предмети.</p></div>
+          <nav class="grade-ribbon" aria-label="Обрати клас">
             {% for school_class in class_summaries %}
-            <a class="class-planet planet-{{ school_class.grade }} {{ 'selected' if grade == school_class.grade else '' }}" href="{{ school_class.href }}" aria-label="Відкрити {{ school_class.grade }} клас: {{ school_class.subject_count }} предметів, {{ school_class.lesson_count }} тем" title="{{ school_class.grade }} клас · {{ school_class.subject_count }} предметів · {{ school_class.lesson_count }} тем">
-              <span class="planet-face"><b>{{ school_class.grade }}</b><small>КЛАС</small></span>
-              <span class="planet-label">{{ school_class.grade }} клас</span>
+            <a class="grade-tile {{ 'active' if grade == school_class.grade else '' }}" href="{{ school_class.href }}" aria-label="{{ school_class.grade }} клас: {{ school_class.subject_count }} предметів, {{ school_class.lesson_count }} тем">
+              <span class="grade-number">{{ '%02d'|format(school_class.grade) }}</span><span class="grade-detail">КЛАС <i>↗</i></span>
             </a>
             {% endfor %}
-            <span class="space-caption">ОБЕРИ СВОЮ ПЛАНЕТУ</span>
-          </div>
+          </nav>
+          <div class="grade-current"><span>ЗАРАЗ ВІДКРИТО</span><strong>{{ grade }} КЛАС</strong><span>{{ subjects|length }} предметів · {{ lesson_count }} тем</span></div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
         <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
         <div class="topic-tools"><input class="topic-search" type="search" placeholder="Пошук предмета…" aria-label="Пошук предмета" data-subject-search></div>
-        <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
-        <section class="subject-grid">
+        <div class="section-head reveal" id="subjects"><div><p class="eyebrow">ТВОЯ ПРОГРАМА · {{ grade }} КЛАС</p><h2>Куди рухаємося?</h2></div><p>Предмети й усі їхні теми →</p></div>
+        <section class="subject-grid reveal">
           {% for subject in subjects %}
           <a class="subject-card" data-subject-card data-subject-title="{{ subject.name|lower }}" style="--i:{{ loop.index0 }}" href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">
             <div class="card-head"><span class="subject-icon">{{ subject.icon }}</span><span class="arrow">↗</span></div>
