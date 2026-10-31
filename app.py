@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template_string, request, url_for
+from flask import Flask, abort, jsonify, render_template_string, request, url_for
 from markupsafe import Markup
 from curriculum import GRADES
 
@@ -8,36 +8,42 @@ CAREER_CATEGORIES = {
     "stem": {
         "name": "Технології й точні науки",
         "professions": "розробник програмного забезпечення, інженер, аналітик даних, фахівець із кібербезпеки, робототехнік",
+        "skills": "логічне мислення, математика, уважність до деталей, робота з цифровими інструментами й готовність постійно вчитися",
         "after9": "Придивись до STEM-профілю в академічному ліцеї або до професійного чи фахового коледжу з ІТ, електроніки, автоматизації чи технічного дизайну.",
         "after12": "Можна дослідити бакалаврські програми з комп’ютерних наук, інженерії, математики, фізики або кібербезпеки; для частини напрямів корисні власні проєкти й портфоліо.",
     },
     "health": {
         "name": "Здоров’я й природничі науки",
         "professions": "біолог, еколог, лабораторний фахівець, фармацевт, лікар, ветеринарний лікар",
+        "skills": "цікавість до природи й організму людини, спостережливість, відповідальність, точність і дбайливе ставлення до людей",
         "after9": "Поглянь на природничий профіль ліцею або на програми професійного й фахового коледжу з лабораторної справи, екології чи догляду за здоров’ям; перевір конкретні умови вступу.",
         "after12": "Можна порівняти програми з біології, екології, фармації, ветеринарії та медицини. Для медичних професій потрібна відповідна тривала освіта й виконання вимог до вступу.",
     },
     "creative": {
         "name": "Творчість, дизайн і комунікації",
         "professions": "графічний або UX/UI-дизайнер, архітектор, ілюстратор, фотограф, редактор, фахівець із медіа",
+        "skills": "уяву, візуальне мислення, уміння помічати деталі, пояснювати ідеї та спокійно вдосконалювати роботу після відгуків",
         "after9": "Розглянь мистецький або мовно-літературний профіль ліцею, художній чи фаховий коледж. Для творчих програм заздалегідь перевір, чи потрібен творчий конкурс або портфоліо.",
         "after12": "Можна обрати дизайн, архітектуру, медіа, журналістику, видавничу справу чи мистецтво у фаховому коледжі або закладі вищої освіти; поступово збирай портфоліо.",
     },
     "people": {
         "name": "Люди, освіта й суспільство",
         "professions": "учитель, психолог, соціальний працівник, юрист, перекладач, фахівець із комунікацій",
+        "skills": "уважне слухання, грамотне мовлення, емпатію, аргументацію, повагу до правил і різних поглядів",
         "after9": "Можна обрати соціально-гуманітарний чи мовний профіль ліцею або дізнатися про програми фахового коледжу з освіти, соціальної роботи, мов і комунікацій.",
         "after12": "Порівняй програми з педагогіки, психології, права, соціальної роботи, мов або комунікацій. Для професій психолога, учителя чи юриста перевір вимоги до освіти й кваліфікації.",
     },
     "business": {
         "name": "Бізнес, економіка й організація",
         "professions": "підприємець, економіст, бухгалтер, маркетолог, логіст, проєктний менеджер",
+        "skills": "планування, базову математику, відповідальність, комунікацію, уміння працювати з інформацією та командою",
         "after9": "Придивись до соціально-гуманітарного профілю, а також до програм професійного чи фахового коледжу з обліку, підприємництва, торгівлі або логістики.",
         "after12": "Можна порівняти програми з економіки, фінансів, менеджменту, маркетингу, підприємництва й логістики у фахових коледжах або університетах.",
     },
     "practical": {
         "name": "Технічні професії й майстерність",
         "professions": "електрик, механік, кухар, зварювальник, будівельник, майстер з обслуговування техніки",
+        "skills": "практичну кмітливість, точність, безпечну роботу з інструментами, терпіння й уміння читати схеми або інструкції",
         "after9": "Професійний коледж або заклад професійної освіти дає змогу поєднати загальну освіту з опануванням професії. Також можна продовжити навчання в ліцеї, якщо хочеться ще дослідити інтереси.",
         "after12": "Можна здобути професійну кваліфікацію, вступити до фахового коледжу або обрати інженерну програму. Дивись на практику, обладнання майстерень і партнерства закладу з роботодавцями.",
     },
@@ -114,27 +120,52 @@ SHELL = r"""<!doctype html>
     .hero-visual{perspective:850px;transform-style:preserve-3d}.orbit{transform-style:preserve-3d}.orbit.orbit-tilt{transform:rotateX(68deg) rotateY(-16deg);animation:orbit3d 24s linear infinite}.planet{transform-style:preserve-3d;animation:bob 4s ease-in-out infinite,planet3d 16s ease-in-out infinite}.float-chip{transform:translateZ(22px)}.subject-card{transform-style:preserve-3d;perspective:700px}.subject-card:hover{transform:translateY(-7px) rotateX(2deg) rotateY(-2deg)}
     .nmt-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:22px 0;padding:22px 25px;border-radius:18px;background:linear-gradient(120deg,#263b35,#395d50);color:white;box-shadow:0 14px 34px #233b3225;animation:appear .5s both}.nmt-banner h2{margin:0 0 7px;font-size:21px}.nmt-banner p{margin:0;color:#e1ede4;font-size:12px;line-height:1.6}.nmt-banner .eyebrow{color:#c7e5b1}.nmt-banner .button{flex:none;background:#c7e5b1;color:#20352d}.nmt-badge{display:inline-flex;margin:7px 0 0;padding:4px 8px;border-radius:20px;background:#edf3e8;color:#34594c;font-size:9px;font-weight:850;letter-spacing:.02em}.nmt-subject-note{margin:0 0 18px;padding:12px 16px;background:#eef3e9;border-left:4px solid #4d7465;border-radius:8px;color:#47594f;font-size:12px}.nmt-tip{border-color:#d8e8d3;background:linear-gradient(135deg,#f2f8ef,#fff)}.career-link{font-size:11px;text-decoration:none;color:var(--green);font-weight:800;white-space:nowrap}.career-link:hover{text-decoration:underline}
     .career-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 23px;margin:20px 0;border:1px solid #e2e6dc;border-radius:16px;background:linear-gradient(110deg,#f2f4eb,#f1edfb)}.career-banner h2{font-size:17px;margin:0 0 4px}.career-banner p:not(.eyebrow){font-size:12px;color:#58655d;margin:0}.career-banner .button{flex:none}
+    .utility-link,.access-button{font-size:11px;text-decoration:none;color:var(--green);font-weight:800;border:0;background:none;cursor:pointer;white-space:nowrap}.access-tools{display:flex;gap:5px;align-items:center}.access-button{padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:#fff}.tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0}.tool-card{padding:20px;background:white;border:1px solid var(--line);border-radius:16px}.tool-card h2{font-size:18px;margin:0 0 8px}.tool-card p,.tool-card label{font-size:12px;color:var(--muted);line-height:1.6}.tool-card input[type=text],.tool-card input[type=number],.tool-card textarea,.topic-search{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);font:inherit}.tool-card textarea{min-height:90px;resize:vertical}.tool-controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.tool-list{display:grid;gap:8px;margin-top:13px}.tool-item{padding:12px;border:1px solid var(--line);border-radius:11px;background:#fafbf8}.tool-item a{color:var(--green);font-weight:800;text-decoration:none}.topic-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.topic-tools .topic-search{flex:1;min-width:210px}.filter-select{padding:10px;border:1px solid var(--line);border-radius:9px;background:white;color:var(--ink)}.lesson-tools{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px}.tool-status{font-size:12px;color:var(--green);font-weight:700;min-height:18px}.access-large{font-size:1.12em!important}.access-larger{font-size:1.25em!important}.high-contrast{--ink:#000;--muted:#222;--green:#003d20;--line:#111;--white:#fff;background:#fff!important}.high-contrast .subject-card,.high-contrast .tool-card,.high-contrast .lesson-panel{border:2px solid #111}
     .career-hero{padding:28px 32px;border-radius:22px;background:linear-gradient(125deg,#e5eee5,#f1eaff);animation:appear .45s both}.career-hero h1{font-size:clamp(30px,5vw,44px);letter-spacing:-.05em;margin:3px 0 9px}.career-hero p{max-width:800px;color:#53635a;font-size:13px;margin:0}.career-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin:18px 0}.career-card,.career-result{padding:18px;border:1px solid var(--line);border-radius:15px;background:white;box-shadow:0 5px 18px #24332808}.career-card h3,.career-result h3{font-size:15px;margin:0 0 8px}.career-card p,.career-result p{font-size:12px;color:#56645a;margin:0 0 8px;line-height:1.55}.career-paths{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0}.career-path{padding:19px;border-radius:16px;background:#fff;border:1px solid var(--line)}.career-path h3{margin:0 0 8px;font-size:16px}.career-path p,.career-path li{font-size:12px;color:#58655d;line-height:1.55}.career-path ul{padding-left:19px;margin:8px 0}.career-test{margin-top:24px;padding:23px;border:1px solid var(--line);border-radius:18px;background:white}.career-test h2{font-size:22px;margin:0 0 7px}.career-test>p{font-size:12px;color:var(--muted)}.career-stage{display:flex;gap:12px;flex-wrap:wrap;padding:14px;margin:15px 0;background:#f6f8f3;border-radius:12px}.career-stage label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700}.career-question{padding:15px 0;border-top:1px solid #edf0e9}.career-question h3{font-size:13px;margin:0 0 8px}.career-option{display:flex;gap:9px;align-items:flex-start;margin:6px 0;padding:9px 11px;border:1px solid #ecefe8;border-radius:10px;font-size:11px;color:#526157;cursor:pointer}.career-option:hover{background:#f7f9f5;border-color:#bfd0c3}.career-option input{accent-color:#4d7465;flex:none;margin-top:2px}.career-results{margin:20px 0;padding:20px;border-radius:17px;background:linear-gradient(135deg,#eef5e8,#f6f1ff)}.career-results h2{margin:0 0 8px}.career-results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.career-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}.career-links a{font-size:12px;color:var(--green);font-weight:800}
     @keyframes planet3d{0%,100%{transform:rotateX(-13deg) rotateY(-15deg) rotateZ(-8deg)}50%{transform:rotateX(14deg) rotateY(165deg) rotateZ(8deg)}}@keyframes orbit3d{to{transform:rotateX(68deg) rotateY(-16deg) rotateZ(360deg)}}
     @media(max-width:800px){.nmt-banner{align-items:flex-start;flex-direction:column}.nmt-banner .button{align-self:flex-start}.career-grid{grid-template-columns:repeat(2,1fr)}.career-banner{align-items:flex-start;flex-direction:column}}
     @media(max-width:540px){.topbar{height:auto;min-height:67px;flex-wrap:wrap;gap:8px;padding:8px 12px}.top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.grade-switch{max-width:100%;overflow-x:auto}.grade-switch a{min-width:34px;padding:6px 5px;font-size:10px}.nmt-banner{padding:18px}.nmt-banner h2{font-size:18px}.career-grid,.career-paths,.career-results-grid{grid-template-columns:1fr}.career-hero{padding:22px 19px}.career-test{padding:17px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.subject-card:hover{transform:none!important}}
+    @media(max-width:800px){.tool-grid{grid-template-columns:1fr}}
+    @media(max-width:540px){.access-tools{width:100%;justify-content:flex-end}.topbar{height:auto}.tool-card{padding:16px}.topic-tools{align-items:stretch}.filter-select{width:100%}}
   </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">Р</span><span>Розумник<small>твій простір для відкриттів</small></span></a>
-    <div class="top-actions"><a class="career-link" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="progress-link" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
+  <div class="top-actions"><a class="career-link" data-i18n="careers" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="utility-link" data-i18n="tools" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a><a class="progress-link" data-i18n="progress" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><div class="access-tools"><button class="access-button" type="button" data-font="increase" aria-label="Збільшити шрифт">A+</button><button class="access-button" type="button" data-contrast aria-label="Контрастний режим">◐</button><button class="access-button" type="button" data-speak aria-label="Озвучити сторінку">🔊</button><button class="access-button" type="button" data-language>UA/EN</button></div><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
   <main>{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
   <script>
     const KEY='rozumnyk-completed-lessons-v1';
+    const BOOKMARK_KEY='rozumnyk-bookmarks-v1', NOTES_KEY='rozumnyk-notes-v1', MISTAKES_KEY='rozumnyk-mistakes-v1', PLAN_KEY='rozumnyk-week-plan-v1', ACTIVITY_KEY='rozumnyk-activity-v1';
     function readDone(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
     function paintProgress(){const done=readDone();document.querySelectorAll('[data-progress-subject]').forEach(el=>{const slug=el.dataset.progressSubject;const n=done.filter(x=>x.startsWith(slug+':')).length;el.textContent=n+' / '+el.dataset.total+' тем'});document.querySelectorAll('[data-progress-bar]').forEach(el=>{const slug=el.dataset.progressBar;const n=done.filter(x=>x.startsWith(slug+':')).length;el.style.width=Math.min(100,n/Number(el.dataset.total||1)*100)+'%'});document.querySelectorAll('[data-lesson-key]').forEach(el=>{if(done.includes(el.dataset.lessonKey)){const badge=el.querySelector('.done');if(badge)badge.textContent='✓'}});const total=document.querySelector('[data-total-done]');if(total)total.textContent=done.length}
     document.querySelectorAll('[data-control-passed="true"]').forEach(el=>{const k=el.dataset.lessonKey;const done=readDone();if(k&&!done.includes(k)){done.push(k);localStorage.setItem(KEY,JSON.stringify(done))}});
+    function readStore(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}}
+    function saveStore(key,value){localStorage.setItem(key,JSON.stringify(value))}
+    function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+    function markActivity(){const a=readStore(ACTIVITY_KEY,{days:[]});const today=todayKey();if(!a.days.includes(today)){a.days.push(today);a.days.sort();saveStore(ACTIVITY_KEY,a)}}
+    document.querySelectorAll('[data-control-passed="true"]').forEach(el=>markActivity());
+    const quizForm=document.querySelector('.quiz form');if(quizForm)quizForm.addEventListener('submit',()=>{const quiz=quizForm.closest('.quiz'), key=quiz.dataset.lessonKey, misses=readStore(MISTAKES_KEY,[]);quizForm.querySelectorAll('.control-question').forEach((q,i)=>{const chosen=q.querySelector('input:checked');const correct=Number(q.dataset.correct);if(chosen&&Number(chosen.value)!==correct){const opts=[...q.querySelectorAll('.choice span')].map(x=>x.textContent.trim());const record={id:key+':'+i,key,question:q.querySelector('h3').textContent.replace(/^\\d+\\.\\s*/,''),options:opts,correct,href:location.pathname+location.search};if(!misses.some(x=>x.id===record.id))misses.push(record)}});saveStore(MISTAKES_KEY,misses);markActivity()});
+    document.querySelectorAll('[data-lesson-bookmark]').forEach(btn=>{const key=btn.dataset.lessonBookmark;const update=()=>{const arr=readStore(BOOKMARK_KEY,[]);btn.textContent=arr.some(x=>x.key===key)?'★ У закладках':'☆ Додати в закладки'};update();btn.addEventListener('click',()=>{let arr=readStore(BOOKMARK_KEY,[]);if(arr.some(x=>x.key===key))arr=arr.filter(x=>x.key!==key);else arr.push({key,title:btn.dataset.title,href:btn.dataset.href});saveStore(BOOKMARK_KEY,arr);update()})});
+    document.querySelectorAll('[data-lesson-note]').forEach(area=>{const key=area.dataset.lessonNote, notes=readStore(NOTES_KEY,{});area.value=notes[key]||'';area.addEventListener('input',()=>{const current=readStore(NOTES_KEY,{});current[key]=area.value;saveStore(NOTES_KEY,current);const status=document.querySelector('[data-note-status]');if(status)status.textContent='Нотатку збережено на цьому пристрої'})});
+    document.querySelectorAll('[data-topic-search]').forEach(input=>{const list=document.querySelector(input.dataset.topicSearch);if(!list)return;const rows=[...list.querySelectorAll('[data-topic-row]')];const filter=document.querySelector('[data-topic-filter]');const run=()=>rows.forEach(row=>{const match=row.dataset.topicTitle.toLocaleLowerCase().includes(input.value.toLocaleLowerCase());const state=filter?.value||'all';const done=readDone().includes(row.dataset.lessonKey);row.hidden=!(match&&(state==='all'||(state==='done'&&done)||(state==='todo'&&!done)))});input.addEventListener('input',run);filter?.addEventListener('change',run)});
+    const subjectSearch=document.querySelector('[data-subject-search]');if(subjectSearch)subjectSearch.addEventListener('input',()=>document.querySelectorAll('[data-subject-card]').forEach(card=>card.hidden=!card.dataset.subjectTitle.toLocaleLowerCase().includes(subjectSearch.value.toLocaleLowerCase())));
+    document.querySelectorAll('[data-font]').forEach(btn=>btn.addEventListener('click',()=>{let size=Number(localStorage.getItem('rozumnyk-font-size')||0);size=Math.min(2,size+1);localStorage.setItem('rozumnyk-font-size',size);document.body.classList.toggle('access-large',size===1);document.body.classList.toggle('access-larger',size===2)}));
+    let fontSize=Number(localStorage.getItem('rozumnyk-font-size')||0);document.body.classList.toggle('access-large',fontSize===1);document.body.classList.toggle('access-larger',fontSize===2);
+    const contrastButton=document.querySelector('[data-contrast]');if(localStorage.getItem('rozumnyk-contrast')==='on')document.body.classList.add('high-contrast');contrastButton?.addEventListener('click',()=>{document.body.classList.toggle('high-contrast');localStorage.setItem('rozumnyk-contrast',document.body.classList.contains('high-contrast')?'on':'off')});
+    document.querySelector('[data-speak]')?.addEventListener('click',()=>{if(!('speechSynthesis'in window)){alert('Озвучення не підтримується цим браузером.');return}speechSynthesis.cancel();const text=(document.querySelector('main')?.innerText||'').slice(0,12000);const utterance=new SpeechSynthesisUtterance(text);utterance.lang='uk-UA';speechSynthesis.speak(utterance)});
+    const translations={careers:['🧭 Професії','🧭 Careers'],tools:['🧰 Мої інструменти','🧰 My tools'],progress:['Мій прогрес','My progress']};
+    function setLanguage(lang){document.documentElement.lang=lang==='en'?'en':'uk';document.querySelectorAll('[data-i18n]').forEach(el=>{const pair=translations[el.dataset.i18n];if(pair)el.textContent=pair[lang==='en'?1:0]});localStorage.setItem('rozumnyk-ui-language',lang)}
+    const langButton=document.querySelector('[data-language]');langButton?.addEventListener('click',()=>setLanguage(localStorage.getItem('rozumnyk-ui-language')==='en'?'uk':'en'));if(localStorage.getItem('rozumnyk-ui-language')==='en')setLanguage('en');
+    const toolRoot=document.querySelector('[data-learning-tools]');if(toolRoot){const grade=toolRoot.dataset.grade;fetch('/study-items?grade='+encodeURIComponent(grade)).then(r=>r.json()).then(items=>initLearningTools(toolRoot,items)).catch(()=>{toolRoot.innerHTML='<p>Не вдалося завантажити список тем. Онови сторінку.</p>'})}
+    function initLearningTools(root,items){const planKey=PLAN_KEY+":"+root.dataset.grade;const esc=s=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));const bookmarks=readStore(BOOKMARK_KEY,[]),notes=readStore(NOTES_KEY,{}),misses=readStore(MISTAKES_KEY,[]),done=readDone();const bookmarkBox=root.querySelector('[data-bookmark-list]');bookmarkBox.innerHTML=bookmarks.length?bookmarks.map(b=>'<div class="tool-item"><a href="'+esc(b.href)+'">'+esc(b.title)+'</a> <button type="button" data-remove-bookmark="'+esc(b.key)+'">Прибрати</button></div>').join(''):'<p>Закладок поки немає. Додавай їх на сторінці уроку.</p>';root.querySelectorAll('[data-remove-bookmark]').forEach(b=>b.onclick=()=>{saveStore(BOOKMARK_KEY,readStore(BOOKMARK_KEY,[]).filter(x=>x.key!==b.dataset.removeBookmark));location.reload()});const notesBox=root.querySelector('[data-note-list]');const noteItems=Object.entries(notes).filter(([,v])=>v.trim());notesBox.innerHTML=noteItems.length?noteItems.map(([k,v])=>{const item=items.find(x=>x.key===k);return '<div class="tool-item"><a href="'+esc(item?.href||'#')+'">'+esc(item?.title||k)+'</a><p>'+esc(v)+'</p></div>'}).join(''):'<p>Нотаток поки немає. Залиш нотатку в уроці.</p>';const mistakeBox=root.querySelector('[data-mistake-list]');mistakeBox.innerHTML=misses.length?misses.map((m,i)=>{const item=items.find(x=>x.key===m.key),related=items.filter(x=>item&&x.slug===item.slug&&x.key!==m.key).slice(0,2);return '<div class="tool-item" data-review-card="'+i+'"><p><strong>'+esc(m.question)+'</strong></p><form data-review-form="'+i+'">'+m.options.map((o,j)=>'<label><input type="radio" name="r'+i+'" value="'+j+'" required> '+esc(o)+'</label><br>').join('')+'<button type="submit">Перевірити відповідь</button></form><p data-review-feedback></p><a href="'+esc(m.href)+'">Повернутися до теми й пройти контрольну →</a><p>Схожі теми предмета: '+related.map(x=>'<a href="'+esc(x.href)+'">'+esc(x.title)+'</a>').join(' · ')+'</p><button type="button" data-remove-mistake="'+esc(m.id)+'">Прибрати з повторення</button></div>'}).join(''):'<p>Помилок для повторення ще немає. Вони з’являться після контрольної, якщо відповідь буде неправильною.</p>';root.querySelectorAll('[data-review-form]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const miss=misses[Number(form.dataset.reviewForm)],answer=Number(new FormData(form).values().next().value),feedback=form.parentElement.querySelector('[data-review-feedback]');if(answer===miss.correct){feedback.textContent='Правильно! Це питання прибрано з черги повторення.';saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==miss.id));setTimeout(()=>location.reload(),900)}else feedback.textContent='Спробуй ще раз. Перечитай пояснення в темі за посиланням нижче.'});root.querySelectorAll('[data-remove-mistake]').forEach(b=>b.onclick=()=>{saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==b.dataset.removeMistake));location.reload()});const streakBox=root.querySelector('[data-achievement-list]');const activity=readStore(ACTIVITY_KEY,{days:[]});let streak=0;const d=new Date();for(;;){const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(!activity.days.includes(key))break;streak++;d.setDate(d.getDate()-1)}const badges=[{n:1,t:'Перший крок',ok:done.length>=1},{n:10,t:'Десять тем',ok:done.length>=10},{n:50,t:'Дослідник',ok:done.length>=50},{n:100,t:'Майстер навчання',ok:done.length>=100},{n:3,t:'Три дні поспіль',ok:streak>=3},{n:7,t:'Тиждень регулярності',ok:streak>=7}];streakBox.innerHTML='<p><strong>'+streak+'</strong> дн. поспіль · <strong>'+done.length+'</strong> тем завершено</p>'+badges.map(x=>'<div class="tool-item">'+(x.ok?'🏅':'🔒')+' '+x.t+(x.ok?' — отримано':' — ціль: '+x.n)+'</div>').join('');const form=root.querySelector('[data-plan-form]');const selection=root.querySelector('[data-plan-subjects]');selection.innerHTML=[...new Map(items.map(x=>[x.slug,x.subject]))].entries().map(([slug,name])=>'<label><input type="checkbox" value="'+esc(slug)+'" checked> '+esc(name)+'</label>').join('');const saved=readStore(planKey,null);if(saved){form.elements.days.value=saved.days;form.elements.minutes.value=saved.minutes;selection.querySelectorAll('input').forEach(x=>x.checked=saved.subjects.includes(x.value));renderPlan(saved)}function renderPlan(p){const selected=items.filter(x=>p.subjects.includes(x.slug));const count=Math.min(selected.length,Math.max(1,Number(p.days)||5));const plan=Array.from({length:count},(_,i)=>selected[(i*3)%selected.length]).filter(Boolean);root.querySelector('[data-plan-output]').innerHTML=plan.map((x,i)=>'<div class="tool-item"><strong>День '+(i+1)+' · '+esc(p.minutes)+' хв</strong><br><a href="'+esc(x.href)+'">'+esc(x.subject)+' — '+esc(x.title)+'</a></div>').join('')||'<p>Обери хоча б один предмет для плану.</p>'}form.onsubmit=e=>{e.preventDefault();const p={days:Number(form.elements.days.value)||5,minutes:Number(form.elements.minutes.value)||20,subjects:[...selection.querySelectorAll('input:checked')].map(x=>x.value)};saveStore(planKey,p);renderPlan(p)}}
     paintProgress();
     if('IntersectionObserver'in window){const ob=new IntersectionObserver(items=>items.forEach(x=>{if(x.isIntersecting){x.target.classList.add('visible');ob.unobserve(x.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(x=>ob.observe(x))}
+    if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!matchMedia('(prefers-reduced-motion:reduce)').matches){document.querySelectorAll('.subject-card,.tool-card,.career-card,.career-result,.career-path,.progress-card').forEach(card=>{card.addEventListener('pointermove',event=>{const rect=card.getBoundingClientRect(),x=(event.clientX-rect.left)/rect.width-.5,y=(event.clientY-rect.top)/rect.height-.5;card.style.setProperty('--tilt-x',(x*5).toFixed(2)+'deg');card.style.setProperty('--tilt-y',(-y*5).toFixed(2)+'deg')});card.addEventListener('pointerleave',()=>{card.style.setProperty('--tilt-x','0deg');card.style.setProperty('--tilt-y','0deg')})})}
   </script>
 </body>
 </html>"""
@@ -182,14 +213,15 @@ def index():
             <a class="button" href="#subjects">Знайти свій предмет <span>↘</span></a>
             <div class="stats"><span><strong>{{ subjects|length }}</strong> навчальних напрямів</span><span><strong>{{ lesson_count }}</strong> тем для дослідження</span><span><strong data-total-done>0</strong> уже опрацьовано</span></div>
           </div>
-          <div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="orbit orbit-tilt"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div>
+          <div class="hero-visual" aria-hidden="true"><div class="hero-stage"><div class="hero-pedestal"></div><div class="hero-cube"><span class="hero-cube-face front">📚</span><span class="hero-cube-face back">✦</span><span class="hero-cube-face right">✏️</span><span class="hero-cube-face left">🔭</span><span class="hero-cube-face top">💡</span><span class="hero-cube-face bottom">🧩</span></div><div class="orbit"></div><div class="orbit orbit-tilt"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div></div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
         <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
+        <div class="topic-tools"><input class="topic-search" type="search" placeholder="Пошук предмета…" aria-label="Пошук предмета" data-subject-search></div>
         <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
         <section class="subject-grid">
           {% for subject in subjects %}
-          <a class="subject-card" style="--i:{{ loop.index0 }}" href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">
+          <a class="subject-card" data-subject-card data-subject-title="{{ subject.name|lower }}" style="--i:{{ loop.index0 }}" href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">
             <div class="card-head"><span class="subject-icon">{{ subject.icon }}</span><span class="arrow">↗</span></div>
             <h3>{{ subject.name }}</h3><p>{{ subject.description }}</p>{% if subject.nmt_role %}<small class="nmt-badge">НМТ · {{ subject.nmt_role }}</small>{% endif %}{% if subject.reference_book %}<small class="reference-book">📚 {{ subject.reference_book }}</small>{% endif %}
             <div class="card-meta"><span>{{ subject.lessons|length }} теми</span><span class="mini-progress" data-progress-subject="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}">0 / {{ subject.lessons|length }} тем</span></div>
@@ -217,9 +249,10 @@ def subject_page(slug):
         <section class="subject-banner"><span class="subject-icon">{{ subject.icon }}</span><div><p class="eyebrow">{{ subject.area }}</p><h1>{{ subject.name }}</h1><p>{{ subject.description }}</p>{% if subject.nmt_role %}<span class="nmt-badge">НМТ · {{ subject.nmt_role }}</span>{% endif %}{% if subject.reference_book %}<p class="reference-book">📚 Орієнтир для 6 класу: {{ subject.reference_book }}</p>{% endif %}</div></section>
         {% if subject.nmt_role %}<p class="nmt-subject-note">У темах є пояснення й контрольні з 12 запитань. Це тренування, а не повний демонстраційний варіант НМТ. Формат і програму свого року звіряй з офіційними матеріалами УЦОЯО.</p>{% endif %}
         <div class="section-head"><div><p class="eyebrow">ТВОЯ НАВЧАЛЬНА МАНДРІВКА · {{ grade }} КЛАС</p><h2>Теми й уроки</h2></div><p data-progress-subject="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}">0 / {{ subject.lessons|length }} тем</p></div>
-        <div class="lesson-list">
+        <div class="topic-tools"><input class="topic-search" type="search" placeholder="Знайти тему…" aria-label="Пошук теми" data-topic-search="#lesson-list"><select class="filter-select" aria-label="Фільтр тем" data-topic-filter><option value="all">Усі теми</option><option value="todo">Ще не пройдені</option><option value="done">Уже пройдені</option></select></div>
+        <div class="lesson-list" id="lesson-list">
           {% for lesson in subject.lessons %}
-          <a class="lesson-row" href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=loop.index, grade=grade) }}" data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ loop.index }}">
+          <a class="lesson-row" href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=loop.index, grade=grade) }}" data-topic-row data-topic-title="{{ lesson.title|lower }}" data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ loop.index }}">
             <span class="lesson-no">{{ '%02d'|format(loop.index) }}</span><span class="lesson-title">{{ lesson.title }}<small>Пояснення · приклад · вправа · мінітест</small></span><span class="done"></span>
           </a>
           {% endfor %}
@@ -241,6 +274,8 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
           <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　<a href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">{{ subject.name }}</a>　/　Тема {{ lesson_id }}</nav>
           <p class="lesson-label">{{ subject.icon }}　{{ subject.name|upper }}　·　ТЕМА {{ lesson_id }} З {{ subject.lessons|length }}</p>
           <h1 class="lesson-title-main">{{ lesson.title }}</h1>
+          <div class="lesson-tools"><button class="access-button" type="button" data-lesson-bookmark data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" data-title="{{ lesson.title }}" data-href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">☆ Додати в закладки</button><a class="access-button" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a></div>
+          <section class="lesson-panel"><h2>📝 Моя нотатка до теми</h2><textarea data-lesson-note="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" placeholder="Запиши свої думки або те, що хочеш повторити…" aria-label="Моя нотатка до уроку"></textarea><p class="tool-status" data-note-status>Нотатка зберігається в цьому браузері.</p></section>
           <section class="lesson-panel"><h2>🧠 Розберімося</h2><p>{{ lesson.explain }}</p></section>
           <section class="lesson-panel example"><h2>💡 Приклад</h2><p>{{ lesson.example }}</p></section>
           <section class="lesson-panel task"><h2>✏️ Спробуй самостійно</h2><p>{{ lesson.task }}</p></section>
@@ -254,7 +289,7 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
             <p class="eyebrow">{% if lesson.nmt_prep %}ТРЕНУВАННЯ НМТ · {% else %}КОНТРОЛЬНА РОБОТА · {% endif %}{{ lesson.control_work|length }} ЗАПИТАНЬ</p><h2>Перевір, як ти засвоїв тему</h2>
             {% if submitted %}<div class="quiz-message {{ 'good' if passed else 'try' }}">{% if passed %}Результат: {{ score }} із {{ lesson.control_work|length }}. Тему зараховано 🌟{% else %}Результат: {{ score }} із {{ lesson.control_work|length }}. Для зарахування потрібно {{ passing_score }} правильних відповідей. Перечитай тему й спробуй ще раз.{% endif %}</div>{% endif %}
             <form method="post" action="{{ url_for('quiz', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">
-              {% for question in lesson.control_work %}{% set question_index = loop.index0 %}<div class="control-question"><h3>{{ loop.index }}. {{ question.question }}</h3>
+              {% for question in lesson.control_work %}{% set question_index = loop.index0 %}<div class="control-question" data-correct="{{ question.answer }}"><h3>{{ loop.index }}. {{ question.question }}</h3>
                 {% for option in question.options %}<label class="choice"><input type="radio" name="answer_{{ question_index }}" value="{{ loop.index0 }}" {% if selected_answers and selected_answers[question_index] == loop.index0|string %}checked{% endif %} required> <span>{{ option }}</span></label>{% endfor %}
               </div>{% endfor %}
               <button class="button" type="submit">Перевірити контрольну <span>→</span></button>
@@ -313,6 +348,44 @@ def progress_page():
     )
 
 
+@app.get("/study-items")
+def study_items():
+    grade = active_grade()
+    items = []
+    for subject in GRADES[grade]:
+        for index, lesson in enumerate(subject["lessons"], 1):
+            items.append({
+                "key": f"{grade}:{subject['slug']}:{index}",
+                "slug": subject["slug"],
+                "subject": subject["name"],
+                "title": lesson["title"],
+                "href": url_for("lesson_page", subject_slug=subject["slug"], lesson_id=index, grade=grade),
+            })
+    return jsonify(items)
+
+
+@app.get("/learning-tools")
+def learning_tools():
+    return show_page(
+        "Мої інструменти",
+        """
+        <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　Мої інструменти</nav>
+        <p class="eyebrow">ТВІЙ ОСОБИСТИЙ НАВЧАЛЬНИЙ ПРОСТІР</p><h1>Мої інструменти й налаштування</h1>
+        <p class="intro">Плануй навчання, повертайся до збережених тем, переглядай помилки й відзначай свої успіхи. Ці дані зберігаються лише в цьому браузері.</p>
+        <div class="tool-grid" data-learning-tools data-grade="{{ grade }}">
+          <section class="tool-card"><h2>🗓️ План на тиждень</h2><p>Обери предмети, скільки днів займатимешся та тривалість одного заняття. План добере теми з поточного класу.</p><form data-plan-form><label>Днів навчання на тиждень <input type="number" name="days" min="1" max="7" value="5"></label><label>Хвилин на день <input type="number" name="minutes" min="10" max="180" step="5" value="25"></label><p>Предмети:</p><div class="tool-controls" data-plan-subjects></div><button class="button" type="submit">Зберегти план</button></form><div class="tool-list" data-plan-output></div></section>
+          <section class="tool-card"><h2>🔖 Закладки</h2><p>Теми, до яких хочеться швидко повернутися.</p><div class="tool-list" data-bookmark-list></div></section>
+          <section class="tool-card"><h2>📝 Нотатки</h2><p>Твої короткі записи з уроків.</p><div class="tool-list" data-note-list></div></section>
+          <section class="tool-card"><h2>🔁 Повторення помилок</h2><p>Переглянь питання, у яких помилився/помилилася, і повтори відповідні теми. У контрольній можна пройти завдання знову; поруч є посилання на інші уроки предмета.</p><div class="tool-list" data-mistake-list></div></section>
+          <section class="tool-card"><h2>🏅 Досягнення та регулярність</h2><p>Зараховані уроки й дні активного навчання допоможуть бачити поступ.</p><div class="tool-list" data-achievement-list></div></section>
+          <section class="tool-card"><h2>♿ Доступність</h2><p>Ці кнопки також є у верхній частині сайту: збільшення шрифту, контрастний режим, озвучення сторінки та перемикач мови меню.</p><div class="tool-controls"><button class="access-button" data-font="increase" type="button">A+ Збільшити шрифт</button><button class="access-button" data-contrast type="button">◐ Контраст</button><button class="access-button" data-speak type="button">🔊 Озвучити</button><button class="access-button" data-language type="button">UA/EN</button></div><p>Перекладаються окремі елементи меню; навчальні уроки наразі залишаються українською.</p></section>
+        </div>
+        <section class="career-path"><p class="eyebrow">ПРО ПРОФЕСІЇ</p><h2>Досліджуй напрям, який тебе зацікавив</h2><p>У профорієнтаційному розділі є приклади професій і посилання на офіційні ресурси, де можна перевірити професійні програми та заклади. Переглянь програми в <a href="https://proftech.mon.gov.ua/" target="_blank" rel="noopener">порталі професійної освіти</a> або знайди освітні програми через <a href="https://registry.edbo.gov.ua/" target="_blank" rel="noopener">ЄДЕБО</a>. Умови вступу перевіряй безпосередньо в обраному закладі.</p><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Перейти до тесту про професії →</a></section>
+        """,
+        grade=active_grade(),
+    )
+
+
 @app.route("/career-guide", methods=["GET", "POST"])
 def career_guide():
     stage = request.form.get("stage", "after9") if request.method == "POST" else request.args.get("stage", "after9")
@@ -336,6 +409,7 @@ def career_guide():
                 {
                     "name": CAREER_CATEGORIES[key]["name"],
                     "professions": CAREER_CATEGORIES[key]["professions"],
+                    "skills": CAREER_CATEGORIES[key]["skills"],
                     "pathway": CAREER_CATEGORIES[key][stage],
                     "points": scores[key],
                 }
@@ -389,7 +463,9 @@ def career_guide():
               <p class="eyebrow">{{ result.points }} із 12 відповідей</p>
               <h3>{{ result.name }}</h3>
               <p><strong>Приклади професій:</strong> {{ result.professions }}.</p>
+              <p><strong>Корисні навички:</strong> {{ result.skills }}.</p>
               <p><strong>Можливий наступний крок:</strong> {{ result.pathway }}</p>
+              <p><a href="https://registry.edbo.gov.ua/" target="_blank" rel="noopener">Знайти освітні програми в ЄДЕБО ↗</a> · <a href="https://proftech.mon.gov.ua/" target="_blank" rel="noopener">Переглянути професійну освіту ↗</a></p>
             </article>
             {% endfor %}
           </div>
