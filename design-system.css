@@ -386,3 +386,92 @@ main { perspective: 1500px; }
 @media(max-width:800px) { .student-hero { grid-template-columns:1fr; padding:30px; }.student-copy h1 { max-width:680px; }.student-stage { height:430px; max-width:560px; margin:0 auto; } }
 @media(max-width:540px) { .student-hero { padding:25px 20px 18px; min-height:0; border-radius:19px; }.student-copy h1 { font-size:43px; }.student-copy .intro { font-size:14px; }.student-copy .stats { gap:12px; font-size:10px; }.student-stage { height:340px; border-radius:16px; }.fallback-student { font-size:108px; } }
 @media(prefers-reduced-motion:reduce) { .student-stage * { scroll-behavior:auto!important; } }
+
+/* A clear return point between the 3D welcome scene and the subject list. */
+.resume-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 24px 0 4px;
+  padding: 22px 26px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-panel);
+  background: var(--color-bg-surface);
+  box-shadow: 0 12px 30px #253c5210;
+}
+
+.resume-copy { min-width: 0; }
+.resume-panel h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+  overflow-wrap: anywhere;
+}
+.resume-panel p {
+  margin: 6px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.resume-panel--ready {
+  border-color: #cbdccf;
+  background: #edf4ed;
+}
+.resume-action {
+  flex: none;
+  min-height: 44px;
+  white-space: nowrap;
+}
+.high-contrast .resume-panel {
+  border: 2px solid #111;
+  color: #000;
+  background: #fff;
+}
+
+@media(max-width:540px) {
+  .resume-panel {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    padding: 19px;
+  }
+  .resume-action { width: 100%; justify-content: center; }
+}
+
+.lesson-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.lesson-tools .access-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 9px 12px;
+}
+.share-feedback { margin: 0 0 14px; }
+.share-feedback .tool-status { margin: 5px 0; }
+.share-fallback {
+  display: grid;
+  gap: 5px;
+  max-width: 680px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.share-fallback input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  color: var(--color-text-primary);
+  background: var(--color-bg-surface);
+  font: inherit;
+}
+.share-feedback [hidden] { display: none !important; }
+.high-contrast .share-fallback input { border: 2px solid #111; }

@@ -1,8 +1,14 @@
+import os
+import xml.etree.ElementTree as ET
+from urllib.parse import urlencode
+
 from flask import Flask, abort, jsonify, render_template_string, request, url_for
 from markupsafe import Markup
 from curriculum import GRADES
 
 app = Flask(__name__)
+SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
+ET.register_namespace("", SITEMAP_NS)
 
 CAREER_CATEGORIES = {
     "stem": {
@@ -96,13 +102,23 @@ SHELL = r"""<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f2">
-  <meta name="description" content="Розумник — зрозумілі навчальні теми, приклади, вправи й контрольні для учнів 5–11 класів.">
+  <meta name="description" content="{{ meta_description }}">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="uk_UA">
   <meta property="og:site_name" content="Розумник">
   <meta property="og:title" content="{{ title }} · Розумник">
-  <meta property="og:description" content="Навчайся у своєму темпі: уроки, приклади й перевірка знань для 5–11 класів.">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:description" content="{{ meta_description }}">
+  <meta property="og:image" content="{{ social_image_url }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Темна космічна ілюстрація з планетами та написом «Розумник — зрозуміле навчання для 5–11 класів».">
+  {% if robots_noindex %}<meta name="robots" content="noindex,follow">{% else %}<link rel="canonical" href="{{ canonical_url }}"><meta property="og:url" content="{{ canonical_url }}">{% endif %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }} · Розумник">
+  <meta name="twitter:description" content="{{ meta_description }}">
+  <meta name="twitter:image" content="{{ social_image_url }}">
+  <meta name="twitter:image:alt" content="Космічна ілюстрація освітньої платформи «Розумник» для учнів 5–11 класів.">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <title>{{ title }} · Розумник</title>
   <style>
@@ -114,7 +130,7 @@ SHELL = r"""<!doctype html>
     .section-head{display:flex;align-items:end;justify-content:space-between;margin:44px 2px 17px}.section-head h2{font-size:27px;letter-spacing:-.04em;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:0 0 5px}.subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.subject-card{position:relative;overflow:hidden;text-decoration:none;background:var(--white);border:1px solid var(--line);border-radius:17px;padding:18px 19px 15px;min-height:187px;display:flex;flex-direction:column;box-shadow:0 4px 16px #25352b05;transition:transform .22s,box-shadow .22s,border-color .22s;animation:rise .55s both;animation-delay:calc(var(--i)*45ms)}.subject-card:hover{transform:translateY(-5px);box-shadow:0 15px 32px #25352b12;border-color:#c1d4c8}.subject-card:after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;background:#eaf2e6;right:-40px;bottom:-52px;transition:transform .35s}.subject-card:hover:after{transform:scale(1.5)}.card-head{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}.subject-icon{width:42px;height:42px;border-radius:14px;background:#edf3e8;display:grid;place-items:center;font-size:22px}.arrow{font-size:20px;color:#73917f;transition:transform .2s}.subject-card:hover .arrow{transform:translate(3px,-3px)}.subject-card h3{font-size:16px;letter-spacing:-.02em;margin:13px 0 5px;position:relative;z-index:1}.subject-card p{font-size:11.5px;line-height:1.5;color:var(--muted);margin:0 0 14px;position:relative;z-index:1}.card-meta{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f0f0eb;padding-top:10px;margin-top:auto;font-size:10px;color:var(--green);font-weight:800;position:relative;z-index:1}.mini-progress{color:#839087;font-weight:600}
     .reference-book{display:block;font-size:10px;line-height:1.4;color:#718176;position:relative;z-index:1;margin:-7px 0 10px}.subject-banner .reference-book{font-size:12px;margin:8px 0 0;color:#53675a}.note{margin-top:21px;padding:14px 17px;border-radius:13px;background:#fff4dc;color:#6c6046;font-size:11px;display:flex;gap:10px}.note p{margin:0}.crumb{font-size:11px;color:#849087;margin:17px 0 19px}.crumb a{color:var(--green);text-decoration:none}.subject-banner{border-radius:22px;background:#e5eee5;padding:30px 34px;display:flex;align-items:center;gap:20px;animation:appear .45s both}.subject-banner .subject-icon{width:58px;height:58px;font-size:29px;background:#fff}.subject-banner h1{font-size:34px;letter-spacing:-.05em;margin:0 0 4px}.subject-banner p:last-child{margin:0;color:#607166;font-size:13px}.lesson-list{background:#fff;border:1px solid var(--line);border-radius:17px;overflow:hidden}.lesson-row{display:flex;align-items:center;gap:15px;padding:14px 18px;text-decoration:none;border-bottom:1px solid #f0f0eb;transition:background .2s}.lesson-row:last-child{border-bottom:0}.lesson-row:hover{background:#f6f8f3}.lesson-no{flex:none;width:36px;height:36px;border-radius:12px;background:#edf3e8;color:var(--green);display:grid;place-items:center;font-size:11px;font-weight:850}.lesson-title{flex:1;font-weight:750;font-size:13px}.lesson-title small{display:block;font-weight:500;color:#879189;font-size:10px;margin-top:2px}.done{font-size:12px;color:var(--green);font-weight:800}
     .lesson-wrap{max-width:790px;margin:0 auto}.lesson-title-main{font-size:clamp(32px,5vw,45px);line-height:1.12;letter-spacing:-.05em;margin:8px 0 23px}.lesson-label{font-size:10px;color:var(--green);font-weight:850;letter-spacing:.16em}.lesson-panel{padding:21px 24px;background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:12px;box-shadow:0 5px 18px #24332806;animation:rise .45s both}.lesson-panel:nth-of-type(2){animation-delay:.08s}.lesson-panel:nth-of-type(3){animation-delay:.15s}.lesson-panel h2{font-size:15px;margin:0 0 8px}.lesson-panel p{font-size:13px;color:#526170;margin:0}.lesson-panel.example{background:#eaf2e9;border-color:#dfeadd}.lesson-panel.task{background:#fff4dc;border-color:#f0e6c9}.lesson-panel.rule{background:#f0edff;border-color:#e4def8}.lesson-panel.warning{background:#fff0e8;border-color:#f4ddd0}.lesson-panel ul,.guide-list{padding-left:20px;margin:8px 0 0;color:#526170;font-size:12px}.lesson-panel li,.guide-list li{margin:5px 0}.course-guide{margin:14px 0;background:#f0edff;border:1px solid #e4def8;border-radius:14px;padding:14px 18px}.course-guide summary{font-weight:800;font-size:12px;cursor:pointer;color:#4c4970}.course-guide .guide-list{margin-bottom:0}.quiz{margin-top:19px;padding:25px;border-radius:18px;background:#263b35;color:white;box-shadow:0 15px 35px #233b3225}.quiz .eyebrow{color:#bdda9c}.quiz h2{font-size:18px;margin:2px 0 17px}.control-question{padding:14px 0;border-top:1px solid #ffffff24}.control-question h3{font-size:13px;line-height:1.5;margin:0 0 9px}.choice{display:flex;gap:10px;align-items:flex-start;background:#ffffff0d;border:1px solid #ffffff1b;padding:10px 12px;border-radius:10px;margin:7px 0;font-size:12px;line-height:1.45;cursor:pointer;transition:background .2s,border .2s}.choice:hover{background:#ffffff19;border-color:#bddaa077}.choice input{accent-color:#bdda9c;flex:none;margin-top:2px}.quiz .button{margin-top:12px;background:#c7e5b1;color:#20352d;box-shadow:none}.quiz-message{padding:11px 13px;border-radius:10px;margin-bottom:13px;font-weight:750;font-size:12px;animation:pop .35s}.quiz-message.good{background:#d8f0d7;color:#23563a}.quiz-message.try{background:#fff0df;color:#77533a}.progress-page h1{font-size:38px;letter-spacing:-.04em}.progress-class{margin:28px 0}.progress-class h2{font-size:21px}.progress-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.progress-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.progress-card h3{font-size:13px;margin:0 0 9px}.progress-card p{font-size:10px;color:var(--muted);margin:8px 0 0}.progress-track{height:7px;border-radius:9px;background:#edf0e9;overflow:hidden}.progress-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#82ad88,#4d7465);border-radius:inherit;transition:width .6s ease}.lesson-nav{display:flex;justify-content:space-between;margin:22px 0}.lesson-nav a{color:var(--green);font-weight:750;text-decoration:none;font-size:12px}.empty{padding:38px;background:white;border-radius:18px;text-align:center}
-    footer{padding:23px;text-align:center;color:#89938d;font-size:10px;border-top:1px solid #e8e9e1}.reveal{opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}.reveal.visible{opacity:1;transform:none}
+    footer{padding:23px;text-align:center;color:#89938d;font-size:10px;border-top:1px solid #e8e9e1}footer a{color:var(--green);font-weight:750;text-underline-offset:3px}.privacy-page{max-width:790px;margin:0 auto}.privacy-page h1{font-size:clamp(34px,5vw,48px);letter-spacing:-.04em;margin-bottom:10px}.privacy-page h2{font-size:18px;margin:27px 0 8px}.privacy-page p,.privacy-page li{max-width:72ch;color:#526170;font-size:13px;line-height:1.75}.privacy-page ul{padding-left:21px}.privacy-callout{padding:17px 19px;border-radius:14px;background:#eaf2e9;margin:19px 0}.privacy-callout p{margin:0}.privacy-actions{margin:25px 0;padding:19px;border-radius:15px;background:#fff4dc}.privacy-actions p{margin-bottom:11px}.privacy-status{min-height:22px;margin:10px 0 0!important;font-weight:750;color:var(--green)!important}.reveal{opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}.reveal.visible{opacity:1;transform:none}
     @keyframes appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes rise{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -9px}}@keyframes drift{to{translate:-25px 18px;scale:1.08}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
     @media(max-width:800px){.hero{grid-template-columns:1fr;padding:38px 32px}.hero-visual{height:180px}.subject-grid,.progress-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:540px){.topbar{height:67px;padding:0 12px}.top-actions{gap:6px}.progress-link{font-size:10px}.grade-switch a{min-width:37px;padding:6px 5px;font-size:10px}main{padding:8px 16px 55px}.hero{padding:30px 22px;min-height:0}.hero h1{font-size:42px}.hero-visual{height:155px}.planet{width:112px;height:112px;font-size:43px}.orbit{width:175px;height:175px}.chip-a{right:0}.chip-c{left:0}.stats{gap:16px}.section-head{margin-top:34px}.section-head h2{font-size:23px}.subject-grid,.progress-grid{grid-template-columns:1fr;gap:10px}.subject-card{min-height:158px;padding:15px 16px}.subject-banner{padding:22px 18px;gap:13px}.subject-banner h1{font-size:25px}.subject-banner .subject-icon{width:48px;height:48px;font-size:23px}.lesson-panel,.quiz{padding:19px}.lesson-row{padding:12px 11px;gap:10px}.lesson-title{font-size:12px}.lesson-nav{gap:12px}}
     .hero-visual{perspective:850px;transform-style:preserve-3d}.orbit{transform-style:preserve-3d}.orbit.orbit-tilt{transform:rotateX(68deg) rotateY(-16deg);animation:orbit3d 24s linear infinite}.planet{transform-style:preserve-3d;animation:bob 4s ease-in-out infinite,planet3d 16s ease-in-out infinite}.float-chip{transform:translateZ(22px)}.subject-card{transform-style:preserve-3d;perspective:700px}.subject-card:hover{transform:translateY(-7px) rotateX(2deg) rotateY(-2deg)}
@@ -138,7 +154,7 @@ SHELL = r"""<!doctype html>
   <div class="top-actions"><a class="career-link" data-i18n="careers" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="utility-link" data-i18n="tools" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a><a class="progress-link" data-i18n="progress" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><div class="access-tools"><button class="access-button" type="button" data-font="increase" aria-label="Збільшити шрифт">A+</button><button class="access-button" type="button" data-contrast aria-label="Контрастний режим">◐</button><button class="access-button" type="button" data-speak aria-label="Озвучити сторінку">🔊</button><button class="access-button" type="button" data-language>UA/EN</button></div><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
   <main id="main-content" tabindex="-1">{{ content|safe }}</main>
-  <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
+  <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня · <a href="{{ url_for('privacy_page') }}">Приватність і дані</a></footer>
   <script>
     const studentCanvas=document.querySelector('#student-scene');
     if(studentCanvas){
@@ -277,17 +293,52 @@ SHELL = r"""<!doctype html>
       import('https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js').then(renderStudent).catch(()=>{studentCanvas.hidden=true;if(fallback)fallback.hidden=false});
     }
     const KEY='rozumnyk-completed-lessons-v1';
-    const BOOKMARK_KEY='rozumnyk-bookmarks-v1', NOTES_KEY='rozumnyk-notes-v1', MISTAKES_KEY='rozumnyk-mistakes-v1', PLAN_KEY='rozumnyk-week-plan-v1', ACTIVITY_KEY='rozumnyk-activity-v1';
+    const BOOKMARK_KEY='rozumnyk-bookmarks-v1', NOTES_KEY='rozumnyk-notes-v1', MISTAKES_KEY='rozumnyk-mistakes-v1', PLAN_KEY='rozumnyk-week-plan-v1', ACTIVITY_KEY='rozumnyk-activity-v1', LAST_LESSON_KEY='rozumnyk-last-lesson-v1';
+    const ROZUMNYK_STORAGE_KEYS=[KEY,BOOKMARK_KEY,NOTES_KEY,MISTAKES_KEY,PLAN_KEY,ACTIVITY_KEY,LAST_LESSON_KEY,'rozumnyk-font-size','rozumnyk-contrast','rozumnyk-ui-language'];
     function readDone(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
     function paintProgress(){const done=readDone();document.querySelectorAll('[data-progress-subject]').forEach(el=>{const slug=el.dataset.progressSubject;const n=done.filter(x=>x.startsWith(slug+':')).length;el.textContent=n+' / '+el.dataset.total+' тем'});document.querySelectorAll('[data-progress-bar]').forEach(el=>{const slug=el.dataset.progressBar;const n=done.filter(x=>x.startsWith(slug+':')).length;el.style.width=Math.min(100,n/Number(el.dataset.total||1)*100)+'%'});document.querySelectorAll('[data-lesson-key]').forEach(el=>{if(done.includes(el.dataset.lessonKey)){const badge=el.querySelector('.done');if(badge)badge.textContent='✓'}});const total=document.querySelector('[data-total-done]');if(total)total.textContent=done.length}
     document.querySelectorAll('[data-control-passed="true"]').forEach(el=>{const k=el.dataset.lessonKey;const done=readDone();if(k&&!done.includes(k)){done.push(k);localStorage.setItem(KEY,JSON.stringify(done))}});
     function readStore(key,fallback){try{return JSON.parse(localStorage.getItem(key)||JSON.stringify(fallback))}catch(e){return fallback}}
     function saveStore(key,value){localStorage.setItem(key,JSON.stringify(value))}
+    function setupResumeLearning(){
+      const current=document.querySelector('[data-current-lesson]');
+      if(current){try{saveStore(LAST_LESSON_KEY,{grade:Number(current.dataset.grade),slug:current.dataset.slug,lessonId:Number(current.dataset.lessonId),title:current.dataset.title,subject:current.dataset.subject})}catch(e){}}
+      const panel=document.querySelector('[data-resume-panel]');
+      if(!panel)return;
+      const saved=readStore(LAST_LESSON_KEY,null),grade=Number(saved?.grade),lessonId=Number(saved?.lessonId),slug=String(saved?.slug||'');
+      if(!saved||!Number.isInteger(grade)||grade<5||grade>11||!Number.isInteger(lessonId)||lessonId<1||!/^[a-z0-9-]+$/i.test(slug))return;
+      const title=String(saved.title||'').trim(),subject=String(saved.subject||'').trim();
+      if(!title||!subject)return;
+      panel.querySelector('[data-resume-title]').textContent='Продовжити: '+title;
+      panel.querySelector('[data-resume-detail]').textContent=subject+' · '+grade+' клас';
+      const link=panel.querySelector('[data-resume-link]');
+      link.href='/lesson/'+encodeURIComponent(slug)+'/'+lessonId+'?grade='+grade;
+      link.setAttribute('aria-label','Продовжити тему «'+title+'», предмет '+subject+', '+grade+' клас');
+      link.innerHTML='Продовжити урок <span aria-hidden="true">→</span>';
+      panel.classList.add('resume-panel--ready');
+    }
+    setupResumeLearning();
     function todayKey(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
     function markActivity(){const a=readStore(ACTIVITY_KEY,{days:[]});const today=todayKey();if(!a.days.includes(today)){a.days.push(today);a.days.sort();saveStore(ACTIVITY_KEY,a)}}
     document.querySelectorAll('[data-control-passed="true"]').forEach(el=>markActivity());
     const quizForm=document.querySelector('.quiz form');if(quizForm)quizForm.addEventListener('submit',()=>{const quiz=quizForm.closest('.quiz'), key=quiz.dataset.lessonKey, misses=readStore(MISTAKES_KEY,[]);quizForm.querySelectorAll('.control-question').forEach((q,i)=>{const chosen=q.querySelector('input:checked');const correct=Number(q.dataset.correct);if(chosen&&Number(chosen.value)!==correct){const opts=[...q.querySelectorAll('.choice span')].map(x=>x.textContent.trim());const record={id:key+':'+i,key,question:q.querySelector('h3').textContent.replace(/^\\d+\\.\\s*/,''),options:opts,correct,href:location.pathname+location.search};if(!misses.some(x=>x.id===record.id))misses.push(record)}});saveStore(MISTAKES_KEY,misses);markActivity()});
     document.querySelectorAll('[data-lesson-bookmark]').forEach(btn=>{const key=btn.dataset.lessonBookmark;const update=()=>{const arr=readStore(BOOKMARK_KEY,[]);btn.textContent=arr.some(x=>x.key===key)?'★ У закладках':'☆ Додати в закладки'};update();btn.addEventListener('click',()=>{let arr=readStore(BOOKMARK_KEY,[]);if(arr.some(x=>x.key===key))arr=arr.filter(x=>x.key!==key);else arr.push({key,title:btn.dataset.title,href:btn.dataset.href});saveStore(BOOKMARK_KEY,arr);update()})});
+    async function shareLesson(button){
+      const status=document.querySelector('[data-share-status]'),fallback=document.querySelector('[data-share-fallback]'),urlField=document.querySelector('[data-share-url]');
+      const shareData={title:button.dataset.title+' · Розумник',text:'Навчальна тема на сайті «Розумник».',url:window.location.href};
+      if(status){status.hidden=true;status.textContent=''}
+      if(fallback)fallback.hidden=true;
+      if(window.navigator&&typeof window.navigator.share==='function'){
+        try{await window.navigator.share(shareData);if(status){status.hidden=false;status.textContent='Посилання на тему передано.'}return}
+        catch(error){if(error&&error.name==='AbortError')return}
+      }
+      try{
+        if(window.navigator&&window.navigator.clipboard&&window.navigator.clipboard.writeText){await window.navigator.clipboard.writeText(shareData.url);if(status){status.hidden=false;status.textContent='Посилання скопійовано. Надішли його тому, кому цікава ця тема.'}return}
+      }catch(error){}
+      if(urlField){urlField.value=shareData.url;if(fallback)fallback.hidden=false;urlField.focus();urlField.select()}
+      if(status){status.hidden=false;status.textContent='Скопіюй адресу теми з поля нижче.'}
+    }
+    document.querySelectorAll('[data-share-lesson]').forEach(button=>button.addEventListener('click',()=>shareLesson(button)));
     document.querySelectorAll('[data-lesson-note]').forEach(area=>{const key=area.dataset.lessonNote, notes=readStore(NOTES_KEY,{});area.value=notes[key]||'';area.addEventListener('input',()=>{const current=readStore(NOTES_KEY,{});current[key]=area.value;saveStore(NOTES_KEY,current);const status=document.querySelector('[data-note-status]');if(status)status.textContent='Нотатку збережено на цьому пристрої'})});
     document.querySelectorAll('[data-topic-search]').forEach(input=>{const list=document.querySelector(input.dataset.topicSearch);if(!list)return;const rows=[...list.querySelectorAll('[data-topic-row]')];const filter=document.querySelector('[data-topic-filter]');const run=()=>rows.forEach(row=>{const match=row.dataset.topicTitle.toLocaleLowerCase().includes(input.value.toLocaleLowerCase());const state=filter?.value||'all';const done=readDone().includes(row.dataset.lessonKey);row.hidden=!(match&&(state==='all'||(state==='done'&&done)||(state==='todo'&&!done)))});input.addEventListener('input',run);filter?.addEventListener('change',run)});
     const subjectSearch=document.querySelector('[data-subject-search]');if(subjectSearch)subjectSearch.addEventListener('input',()=>document.querySelectorAll('[data-subject-card]').forEach(card=>card.hidden=!card.dataset.subjectTitle.toLocaleLowerCase().includes(subjectSearch.value.toLocaleLowerCase())));
@@ -298,6 +349,7 @@ SHELL = r"""<!doctype html>
     const translations={careers:['🧭 Професії','🧭 Careers'],tools:['🧰 Мої інструменти','🧰 My tools'],progress:['Мій прогрес','My progress']};
     function setLanguage(lang){document.documentElement.lang=lang==='en'?'en':'uk';document.querySelectorAll('[data-i18n]').forEach(el=>{const pair=translations[el.dataset.i18n];if(pair)el.textContent=pair[lang==='en'?1:0]});localStorage.setItem('rozumnyk-ui-language',lang)}
     const langButton=document.querySelector('[data-language]');langButton?.addEventListener('click',()=>setLanguage(localStorage.getItem('rozumnyk-ui-language')==='en'?'uk':'en'));if(localStorage.getItem('rozumnyk-ui-language')==='en')setLanguage('en');
+    const clearDataButton=document.querySelector('[data-clear-site-data]');clearDataButton?.addEventListener('click',()=>{const status=document.querySelector('[data-clear-data-status]');if(!window.confirm('Видалити з цього браузера прогрес, нотатки, закладки, план і налаштування «Розумника»?'))return;let failed=0;ROZUMNYK_STORAGE_KEYS.forEach(key=>{try{localStorage.removeItem(key)}catch(error){failed++}});if(status)status.textContent=failed?'Частину даних не вдалося видалити. Перевір налаштування сховища браузера.':'Дані «Розумника» видалені з цього браузера. В інших сайтах нічого не змінено.'});
     const toolRoot=document.querySelector('[data-learning-tools]');if(toolRoot){const grade=toolRoot.dataset.grade;fetch('/study-items?grade='+encodeURIComponent(grade)).then(r=>r.json()).then(items=>initLearningTools(toolRoot,items)).catch(()=>{toolRoot.innerHTML='<p>Не вдалося завантажити список тем. Онови сторінку.</p>'})}
     function initLearningTools(root,items){const planKey=PLAN_KEY+":"+root.dataset.grade;const esc=s=>String(s).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));const bookmarks=readStore(BOOKMARK_KEY,[]),notes=readStore(NOTES_KEY,{}),misses=readStore(MISTAKES_KEY,[]),done=readDone();const bookmarkBox=root.querySelector('[data-bookmark-list]');bookmarkBox.innerHTML=bookmarks.length?bookmarks.map(b=>'<div class="tool-item"><a href="'+esc(b.href)+'">'+esc(b.title)+'</a> <button type="button" data-remove-bookmark="'+esc(b.key)+'">Прибрати</button></div>').join(''):'<p>Закладок поки немає. Додавай їх на сторінці уроку.</p>';root.querySelectorAll('[data-remove-bookmark]').forEach(b=>b.onclick=()=>{saveStore(BOOKMARK_KEY,readStore(BOOKMARK_KEY,[]).filter(x=>x.key!==b.dataset.removeBookmark));location.reload()});const notesBox=root.querySelector('[data-note-list]');const noteItems=Object.entries(notes).filter(([,v])=>v.trim());notesBox.innerHTML=noteItems.length?noteItems.map(([k,v])=>{const item=items.find(x=>x.key===k);return '<div class="tool-item"><a href="'+esc(item?.href||'#')+'">'+esc(item?.title||k)+'</a><p>'+esc(v)+'</p></div>'}).join(''):'<p>Нотаток поки немає. Залиш нотатку в уроці.</p>';const mistakeBox=root.querySelector('[data-mistake-list]');mistakeBox.innerHTML=misses.length?misses.map((m,i)=>{const item=items.find(x=>x.key===m.key),related=items.filter(x=>item&&x.slug===item.slug&&x.key!==m.key).slice(0,2);return '<div class="tool-item" data-review-card="'+i+'"><p><strong>'+esc(m.question)+'</strong></p><form data-review-form="'+i+'">'+m.options.map((o,j)=>'<label><input type="radio" name="r'+i+'" value="'+j+'" required> '+esc(o)+'</label><br>').join('')+'<button type="submit">Перевірити відповідь</button></form><p data-review-feedback></p><a href="'+esc(m.href)+'">Повернутися до теми й пройти контрольну →</a><p>Схожі теми предмета: '+related.map(x=>'<a href="'+esc(x.href)+'">'+esc(x.title)+'</a>').join(' · ')+'</p><button type="button" data-remove-mistake="'+esc(m.id)+'">Прибрати з повторення</button></div>'}).join(''):'<p>Помилок для повторення ще немає. Вони з’являться після контрольної, якщо відповідь буде неправильною.</p>';root.querySelectorAll('[data-review-form]').forEach(form=>form.onsubmit=e=>{e.preventDefault();const miss=misses[Number(form.dataset.reviewForm)],answer=Number(new FormData(form).values().next().value),feedback=form.parentElement.querySelector('[data-review-feedback]');if(answer===miss.correct){feedback.textContent='Правильно! Це питання прибрано з черги повторення.';saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==miss.id));setTimeout(()=>location.reload(),900)}else feedback.textContent='Спробуй ще раз. Перечитай пояснення в темі за посиланням нижче.'});root.querySelectorAll('[data-remove-mistake]').forEach(b=>b.onclick=()=>{saveStore(MISTAKES_KEY,readStore(MISTAKES_KEY,[]).filter(x=>x.id!==b.dataset.removeMistake));location.reload()});const streakBox=root.querySelector('[data-achievement-list]');const activity=readStore(ACTIVITY_KEY,{days:[]});let streak=0;const d=new Date();for(;;){const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');if(!activity.days.includes(key))break;streak++;d.setDate(d.getDate()-1)}const badges=[{n:1,t:'Перший крок',ok:done.length>=1},{n:10,t:'Десять тем',ok:done.length>=10},{n:50,t:'Дослідник',ok:done.length>=50},{n:100,t:'Майстер навчання',ok:done.length>=100},{n:3,t:'Три дні поспіль',ok:streak>=3},{n:7,t:'Тиждень регулярності',ok:streak>=7}];streakBox.innerHTML='<p><strong>'+streak+'</strong> дн. поспіль · <strong>'+done.length+'</strong> тем завершено</p>'+badges.map(x=>'<div class="tool-item">'+(x.ok?'🏅':'🔒')+' '+x.t+(x.ok?' — отримано':' — ціль: '+x.n)+'</div>').join('');const form=root.querySelector('[data-plan-form]');const selection=root.querySelector('[data-plan-subjects]');selection.innerHTML=[...new Map(items.map(x=>[x.slug,x.subject]))].entries().map(([slug,name])=>'<label><input type="checkbox" value="'+esc(slug)+'" checked> '+esc(name)+'</label>').join('');const saved=readStore(planKey,null);if(saved){form.elements.days.value=saved.days;form.elements.minutes.value=saved.minutes;selection.querySelectorAll('input').forEach(x=>x.checked=saved.subjects.includes(x.value));renderPlan(saved)}function renderPlan(p){const selected=items.filter(x=>p.subjects.includes(x.slug));const count=Math.min(selected.length,Math.max(1,Number(p.days)||5));const plan=Array.from({length:count},(_,i)=>selected[(i*3)%selected.length]).filter(Boolean);root.querySelector('[data-plan-output]').innerHTML=plan.map((x,i)=>'<div class="tool-item"><strong>День '+(i+1)+' · '+esc(p.minutes)+' хв</strong><br><a href="'+esc(x.href)+'">'+esc(x.subject)+' — '+esc(x.title)+'</a></div>').join('')||'<p>Обери хоча б один предмет для плану.</p>'}form.onsubmit=e=>{e.preventDefault();const p={days:Number(form.elements.days.value)||5,minutes:Number(form.elements.minutes.value)||20,subjects:[...selection.querySelectorAll('input:checked')].map(x=>x.value)};saveStore(planKey,p);renderPlan(p)}}
     paintProgress();
@@ -308,11 +360,117 @@ SHELL = r"""<!doctype html>
 </html>"""
 
 
+def public_origin():
+    configured = (
+        os.environ.get("PUBLIC_BASE_URL", "").strip()
+        or os.environ.get("RENDER_EXTERNAL_URL", "").strip()
+    )
+    if configured:
+        return configured.rstrip("/")
+    render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+    if render_host:
+        return f"https://{render_host}"
+    return request.url_root.rstrip("/")
+
+
+def seo_description(text, limit=160):
+    cleaned = " ".join(str(text).split())
+    if len(cleaned) <= limit:
+        return cleaned
+    shortened = cleaned[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,.;:—-")
+    return shortened + "…"
+
+
 def show_page(title, template, **values):
     grade = active_grade()
     values.setdefault("grade", grade)
+    description = values.pop(
+        "meta_description",
+        f"Навчальні матеріали, теми й уроки для учнів {grade} класу на сайті «Розумник».",
+    )
+    robots_noindex = bool(values.pop("robots_noindex", False))
+    canonical_url = values.pop("canonical_url", None)
+    if canonical_url is None:
+        canonical_params = {"grade": grade}
+        if request.endpoint == "career_guide":
+            stage = values.get("stage", "after9")
+            if stage in ("after9", "after12"):
+                canonical_params["stage"] = stage
+        canonical_url = (
+            public_origin() + request.path + "?" + urlencode(canonical_params)
+        )
     content = render_template_string(template, **values)
-    return render_template_string(SHELL, title=title, content=Markup(content), grade=grade)
+    return render_template_string(
+        SHELL,
+        title=title,
+        content=Markup(content),
+        grade=grade,
+        meta_description=seo_description(description),
+        canonical_url=canonical_url,
+        social_image_url=public_origin() + url_for("static", filename="social-card.png"),
+        robots_noindex=robots_noindex,
+    )
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    body = f"User-agent: *\nAllow: /\n\nSitemap: {public_origin()}/sitemap.xml\n"
+    response = app.response_class(body, mimetype="text/plain")
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    root = ET.Element(f"{{{SITEMAP_NS}}}urlset")
+    base = public_origin()
+    # Keep the index focused on class and subject landing pages; lesson URLs
+    # remain discoverable through the crawlable topic links on each subject page.
+    for grade, subjects in sorted(GRADES.items()):
+        paths = [url_for("index", grade=grade)]
+        paths.extend(
+            url_for("subject_page", slug=subject["slug"], grade=grade)
+            for subject in subjects
+        )
+        for path in paths:
+            entry = ET.SubElement(root, f"{{{SITEMAP_NS}}}url")
+            ET.SubElement(entry, f"{{{SITEMAP_NS}}}loc").text = base + path
+    privacy_entry = ET.SubElement(root, f"{{{SITEMAP_NS}}}url")
+    ET.SubElement(privacy_entry, f"{{{SITEMAP_NS}}}loc").text = base + url_for("privacy_page")
+    response = app.response_class(
+        ET.tostring(root, encoding="utf-8", xml_declaration=True),
+        mimetype="application/xml",
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
+
+
+@app.get("/privacy")
+def privacy_page():
+    return show_page(
+        "Приватність і навчальні дані",
+        """
+        <section class="privacy-page">
+          <nav class="crumb"><a href="{{ url_for('index', grade=5) }}">Головна</a>　/　Приватність і дані</nav>
+          <h1>Твої дані — під твоїм контролем</h1>
+          <p class="intro">Коротко пояснюємо, що зберігає «Розумник», де це зберігається і як видалити ці дані.</p>
+          <div class="privacy-callout"><p><strong>Обліковий запис не потрібен.</strong> Прогрес і особисті матеріали зберігаються у сховищі браузера на цьому пристрої. Вони автоматично не синхронізуються з іншими пристроями.</p></div>
+          <h2>Що сайт зберігає в браузері</h2>
+          <ul><li>завершені теми, останній відкритий урок і дні навчальної активності;</li><li>твої нотатки, закладки, план навчання та питання для повторення;</li><li>налаштування розміру шрифту, контрасту й мови меню.</li></ul>
+          <p>Ці записи зберігаються через локальне сховище браузера. Вони залишаються на цьому пристрої, доки ти їх не видалиш або не очистиш дані сайту в налаштуваннях браузера. Не записуй у нотатки паролі, адресу, телефон чи іншу чутливу інформацію.</p>
+          <h2>Як працюють контрольні</h2>
+          <p>Коли ти надсилаєш контрольну, обрані відповіді передаються серверній частині сайту, щоб підрахувати результат і показати розбір. Застосунок не створює обліковий запис і не записує оцінку до профілю чи бази даних. Черга помилок для повторення зберігається локально у браузері.</p>
+          <h2>Зовнішня бібліотека для 3D-сцени</h2>
+          <p>На головній сторінці браузер завантажує бібліотеку Three.js із jsDelivr для показу 3D-ілюстрації. Якщо бібліотека недоступна, сайт показує запасне зображення учня.</p>
+          <h2>Видалити дані з цього браузера</h2>
+          <div class="privacy-actions"><p>Кнопка видалить локальний прогрес, нотатки, закладки, план, чергу повторення та налаштування «Розумника» у цьому браузері. Дані інших сайтів вона не змінює.</p><button class="button" type="button" data-clear-site-data>Видалити мої дані з цього браузера</button><p class="privacy-status" data-clear-data-status aria-live="polite"></p></div>
+          <h2>Технічні запити</h2>
+          <p>Щоб відкрити сторінку або перевірити контрольну, браузер надсилає запит сайту. Платформа хостингу може вести технічні журнали запитів за власними правилами. Ця сторінка описує дані, які зберігає сам застосунок; якщо у майбутньому з’являться облікові записи, аналітика чи інші способи зберігання, опис потрібно буде оновити.</p>
+        </section>
+        """,
+        meta_description="Що сайт «Розумник» зберігає у браузері, як працюють контрольні та як видалити локальні навчальні дані.",
+        canonical_url=public_origin() + url_for("privacy_page"),
+    )
 
 
 def active_grade():
@@ -340,7 +498,7 @@ def index():
     subjects = GRADES[grade]
     lesson_count = sum(len(item["lessons"]) for item in subjects)
     return show_page(
-        "Головна",
+        f"Навчання — {grade} клас",
         """
         <section class="hero student-hero">
           <div class="student-copy">
@@ -357,6 +515,13 @@ def index():
           </div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
+        <section class="resume-panel" data-resume-panel aria-labelledby="resume-title">
+          <div class="resume-copy">
+            <h2 id="resume-title" data-resume-title>Почни з теми, яка тебе цікавить</h2>
+            <p data-resume-detail>Обери предмет і відкрий перший урок. Розумник запам’ятає, де ти зупинився.</p>
+          </div>
+          <a class="button resume-action" data-resume-link href="#subjects">Обрати предмет <span aria-hidden="true">→</span></a>
+        </section>
         <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
         <div class="topic-tools"><input class="topic-search" type="search" placeholder="Пошук предмета…" aria-label="Пошук предмета" data-subject-search></div>
         <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
@@ -374,6 +539,10 @@ def index():
         subjects=subjects,
         grade=grade,
         lesson_count=lesson_count,
+        meta_description=(
+            f"Навчальні теми й зрозумілі уроки для {grade} класу: "
+            f"обирай предмет, вивчай приклади та перевіряй знання."
+        ),
     )
 
 
@@ -384,7 +553,7 @@ def subject_page(slug):
     if not subject:
         abort(404)
     return show_page(
-        subject["name"],
+        f"{subject['name']} — {grade} клас",
         """
         <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　{{ subject.name }}</nav>
         <section class="subject-banner"><span class="subject-icon">{{ subject.icon }}</span><div><p class="eyebrow">{{ subject.area }}</p><h1>{{ subject.name }}</h1><p>{{ subject.description }}</p>{% if subject.nmt_role %}<span class="nmt-badge">НМТ · {{ subject.nmt_role }}</span>{% endif %}{% if subject.reference_book %}<p class="reference-book">📚 Орієнтир для 6 класу: {{ subject.reference_book }}</p>{% endif %}</div></section>
@@ -401,6 +570,10 @@ def subject_page(slug):
         """,
         subject=subject,
         grade=grade,
+        meta_description=(
+            f"{subject['description']} Теми, приклади, вправи й контрольні "
+            f"для {grade} класу."
+        ),
     )
 
 
@@ -409,13 +582,15 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
     passing_score = 9 if len(lesson.get("control_work", [])) == 12 else 4
     passed = submitted and score >= passing_score
     return show_page(
-        lesson["title"],
+        f"{lesson['title']} — {subject['name']}, {grade} клас",
         """
         <div class="lesson-wrap">
+          <span hidden data-current-lesson data-grade="{{ grade }}" data-slug="{{ subject.slug }}" data-lesson-id="{{ lesson_id }}" data-title="{{ lesson.title }}" data-subject="{{ subject.name }}"></span>
           <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　<a href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">{{ subject.name }}</a>　/　Тема {{ lesson_id }}</nav>
           <p class="lesson-label">{{ subject.icon }}　{{ subject.name|upper }}　·　ТЕМА {{ lesson_id }} З {{ subject.lessons|length }}</p>
           <h1 class="lesson-title-main">{{ lesson.title }}</h1>
-          <div class="lesson-tools"><button class="access-button" type="button" data-lesson-bookmark data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" data-title="{{ lesson.title }}" data-href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">☆ Додати в закладки</button><a class="access-button" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a></div>
+          <div class="lesson-tools"><button class="access-button" type="button" data-lesson-bookmark data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" data-title="{{ lesson.title }}" data-href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">☆ Додати в закладки</button><button class="access-button" type="button" data-share-lesson data-title="{{ lesson.title }}">↗ Поділитися темою</button><a class="access-button" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a></div>
+          <div class="share-feedback"><p hidden class="tool-status" data-share-status aria-live="polite"></p><label hidden class="share-fallback" data-share-fallback>Адреса теми<input type="url" data-share-url readonly aria-label="Посилання на навчальну тему"></label></div>
           <section class="lesson-panel"><h2>📝 Моя нотатка до теми</h2><textarea data-lesson-note="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" placeholder="Запиши свої думки або те, що хочеш повторити…" aria-label="Моя нотатка до уроку"></textarea><p class="tool-status" data-note-status>Нотатка зберігається в цьому браузері.</p></section>
           <section class="lesson-panel"><h2>🧠 Розберімося</h2><p>{{ lesson.explain }}</p></section>
           <section class="lesson-panel example"><h2>💡 Приклад</h2><p>{{ lesson.example }}</p></section>
@@ -450,6 +625,11 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
         score=score,
         passing_score=passing_score,
         selected_answers=selected_answers,
+        meta_description=(
+            f"{lesson['explain']} Приклад, вправа та контрольна для "
+            f"самоперевірки з предмета «{subject['name']}»."
+        ),
+        robots_noindex=submitted,
     )
 
 
@@ -486,6 +666,7 @@ def progress_page():
         """,
         subjects=GRADES[grade],
         grade=grade,
+        robots_noindex=True,
     )
 
 
@@ -502,7 +683,9 @@ def study_items():
                 "title": lesson["title"],
                 "href": url_for("lesson_page", subject_slug=subject["slug"], lesson_id=index, grade=grade),
             })
-    return jsonify(items)
+    response = jsonify(items)
+    response.headers["X-Robots-Tag"] = "noindex"
+    return response
 
 
 @app.get("/learning-tools")
@@ -524,6 +707,7 @@ def learning_tools():
         <section class="career-path"><p class="eyebrow">ПРО ПРОФЕСІЇ</p><h2>Досліджуй напрям, який тебе зацікавив</h2><p>У профорієнтаційному розділі є приклади професій і посилання на офіційні ресурси, де можна перевірити професійні програми та заклади. Переглянь програми в <a href="https://proftech.mon.gov.ua/" target="_blank" rel="noopener">порталі професійної освіти</a> або знайди освітні програми через <a href="https://registry.edbo.gov.ua/" target="_blank" rel="noopener">ЄДЕБО</a>. Умови вступу перевіряй безпосередньо в обраному закладі.</p><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Перейти до тесту про професії →</a></section>
         """,
         grade=active_grade(),
+        robots_noindex=True,
     )
 
 
@@ -642,6 +826,11 @@ def career_guide():
         results=results,
         submitted=submitted,
         error_message=error_message,
+        meta_description=(
+            "Освітні варіанти після 9-го та 12-го класу й тест для дослідження "
+            "власних інтересів і можливих професійних напрямів."
+        ),
+        robots_noindex=request.method == "POST",
     )
 
 
@@ -652,6 +841,8 @@ def not_found(_error):
         """
         <section class="empty"><div style="font-size:42px">🧭</div><p class="eyebrow">ЗДАЄТЬСЯ, МИ ЗВЕРНУЛИ НЕ ТУДИ</p><h1>Сторінку не знайдено</h1><p>Повернись до предметів і обери потрібну тему.</p><a class="button" href="{{ url_for('index', grade=grade) }}">На головну　→</a></section>
         """,
+        robots_noindex=True,
+        canonical_url="",
     ), 404
 
 
