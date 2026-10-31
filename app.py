@@ -154,38 +154,69 @@ SHELL = r"""<!doctype html>
         const rimLight=new THREE.PointLight(0xb8f26a,2.4,8);rimLight.position.set(2.2,3.2,-1.2);scene.add(rimLight);
         const blueLight=new THREE.PointLight(0x628cff,1.5,7);blueLight.position.set(-3,1.5,2);scene.add(blueLight);
         const mat=(color,roughness=.72,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
-        const skin=mat(0xe5ad83),hair=mat(0x30231f),hoodie=mat(0x68834d),hoodieDark=mat(0x465e39),trousers=mat(0x26344a),shoe=mat(0xe7e6dc),book=mat(0x3268d5,.38),pages=mat(0xf4edd9),ink=mat(0x24231e);
-        const student=new THREE.Group();scene.add(student);
-        function sphere(parent,material,position,scale){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);mesh.position.set(...position);mesh.scale.set(...scale);parent.add(mesh);return mesh}
+        const skin=mat(0xc98f6a,.66),skinLight=mat(0xd9a17d,.62),hair=mat(0x251b17,.42),hoodie=mat(0x496b3e,.82),hoodieLight=mat(0x5b7c4b,.78),hoodieDark=mat(0x334b30,.88),trousers=mat(0x26344b,.88),shoe=mat(0xe9e9e2,.55),sole=mat(0xaeb4b2,.8),book=mat(0x285bc4,.38),pages=mat(0xf0e8d3,.8),ink=mat(0x251c18,.42),eyeWhite=mat(0xfff8ec,.32),iris=mat(0x54372a,.36),accent=mat(0xe7c56a,.52);
+        function sphere(parent,material,position,scale,segments=40){const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,segments,Math.max(24,Math.round(segments*.7))),material);mesh.position.set(...position);mesh.scale.set(...scale);parent.add(mesh);return mesh}
         function box(parent,material,position,size){const mesh=new THREE.Mesh(new THREE.BoxGeometry(...size),material);mesh.position.set(...position);parent.add(mesh);return mesh}
-        function segment(parent,material,a,b,radius){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start),length=delta.length();const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius*.94,radius,length,14),material);mesh.position.copy(start.clone().add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);sphere(parent,material,a,[radius,radius,radius]);sphere(parent,material,b,[radius,radius,radius]);return mesh}
+        function segment(parent,material,a,b,radius){const start=new THREE.Vector3(...a),end=new THREE.Vector3(...b),delta=end.clone().sub(start),length=delta.length();const mesh=new THREE.Mesh(new THREE.CylinderGeometry(radius*.94,radius,length,24,1),material);mesh.position.copy(start.clone().add(end).multiplyScalar(.5));mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());parent.add(mesh);sphere(parent,material,a,[radius,radius,radius],28);sphere(parent,material,b,[radius,radius,radius],28);return mesh}
+        function makePlanetTexture(kind,base,accentColor){
+          const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;const ctx=canvas.getContext('2d');
+          const gradient=ctx.createLinearGradient(0,0,512,256);gradient.addColorStop(0,base);gradient.addColorStop(.48,accentColor);gradient.addColorStop(1,base);ctx.fillStyle=gradient;ctx.fillRect(0,0,512,256);
+          if(kind==='earth'){
+            ctx.fillStyle='#68a765';
+            for(const [x,y,sx,sy] of [[85,86,48,32],[130,156,35,24],[250,74,62,35],[288,126,46,29],[404,92,55,34],[440,171,32,18]]){ctx.beginPath();ctx.ellipse(x,y,sx,sy,Math.sin(x)*.3,0,Math.PI*2);ctx.fill()}
+            ctx.fillStyle='#d5e9de55';for(let i=0;i<18;i++){ctx.beginPath();ctx.ellipse(i*37,(i*53)%256,24,5,Math.sin(i)*.2,0,Math.PI*2);ctx.fill()}
+          }else if(kind==='banded'){
+            for(let i=0;i<12;i++){const y=i*23+8;ctx.fillStyle=i%2?'#f3d7aa66':'#4d315522';ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(120,y-12,260,y+13,512,y-5);ctx.lineTo(512,y+12);ctx.bezierCurveTo(270,y+27,120,y+2,0,y+18);ctx.closePath();ctx.fill()}
+            ctx.beginPath();ctx.fillStyle='#bd634e';ctx.ellipse(351,144,37,15,-.1,0,Math.PI*2);ctx.fill();
+          }else{
+            for(let i=0;i<38;i++){const x=(i*83)%512,y=(i*47+13)%256,r=3+(i%5)*2;ctx.beginPath();ctx.fillStyle=i%2?'#17191c30':'#f2d8b855';ctx.ellipse(x,y,r*1.5,r,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#1a1a1a25';ctx.lineWidth=2;ctx.stroke()}
+          }
+          const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
+        }
+        const student=new THREE.Group();student.position.set(.96,0,.26);student.scale.setScalar(.82);scene.add(student);
         // Shoes and legs
         for(const side of [-1,1]){
           const x=side*.19;
-          box(student,shoe,[x,.14,.17],[.35,.18,.52]);
-          segment(student,trousers,[x,1.03,0],[x-side*.025,.48,.03],.16);
-          segment(student,trousers,[x-side*.025,.52,.03],[x,.2,.08],.145);
-          sphere(student,hoodieDark,[x,1.05,0],[.2,.12,.2]);
+          box(student,sole,[x,.085,.17],[.37,.08,.55]);box(student,shoe,[x,.16,.17],[.35,.15,.52]);
+          sphere(student,shoe,[x,.18,.34],[.17,.105,.18]);
+          segment(student,trousers,[x,1.03,0],[x-side*.025,.48,.03],.15);
+          segment(student,trousers,[x-side*.025,.52,.03],[x,.2,.08],.137);
+          sphere(student,hoodieDark,[x,1.045,.01],[.17,.09,.17]);
+          segment(student,hoodieDark,[x-.08,.3,.09],[x+.08,.3,.09],.008);
         }
-        // Torso, neck and head
-        const torso=new THREE.Mesh(new THREE.CylinderGeometry(.39,.48,.9,24,1),hoodie);torso.position.set(0,1.47,0);student.add(torso);
-        sphere(student,hoodie,[0,1.91,0],[.4,.17,.4]);sphere(student,hoodieDark,[0,1.04,.015],[.46,.18,.43]);
-        segment(student,skin,[0,1.88,0],[0,2.1,0],.16);
-        sphere(student,skin,[0,2.43,.02],[.36,.43,.34]);
-        sphere(student,hair,[0,2.68,-.035],[.37,.24,.35]);
-        sphere(student,hair,[-.28,2.55,.12],[.14,.25,.25]);
-        sphere(student,hair,[.24,2.63,.18],[.16,.2,.2]);
-        for(const x of [-.125,.125]){
-          sphere(student,shoe,[x,2.46,.332],[.047,.054,.027]);
-          sphere(student,ink,[x,2.455,.354],[.019,.025,.014]);
+        // Rounded sweatshirt, soft collar and a more detailed face and hairstyle.
+        const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.405,.58,8,32),hoodie);torso.position.set(0,1.47,0);student.add(torso);
+        sphere(student,hoodieLight,[0,1.89,-.015],[.32,.18,.32]);
+        sphere(student,hoodieDark,[0,1.025,.015],[.42,.13,.39]);
+        const collar=new THREE.Mesh(new THREE.TorusGeometry(.16,.035,12,40),hoodieDark);collar.position.set(0,1.93,.015);collar.rotation.x=Math.PI/2;student.add(collar);
+        box(student,hoodieDark,[0,1.23,.393],[.43,.2,.035]);
+        const pocketSeam=new THREE.Mesh(new THREE.TorusGeometry(.13,.008,5,32,Math.PI),hoodieLight);pocketSeam.position.set(0,1.32,.418);pocketSeam.rotation.z=Math.PI;student.add(pocketSeam);
+        const stringMat=mat(0xd2d0b9,.8);
+        segment(student,stringMat,[-.055,1.85,.16],[-.09,1.55,.37],.012);segment(student,stringMat,[.055,1.85,.16],[.09,1.55,.37],.012);
+        sphere(student,accent,[-.09,1.53,.38],[.018,.025,.018]);sphere(student,accent,[.09,1.53,.38],[.018,.025,.018]);
+        segment(student,skin,[0,1.88,0],[0,2.11,0],.14);
+        sphere(student,skin,[0,2.43,.015],[.36,.44,.34],56);
+        sphere(student,hair,[0,2.67,-.045],[.37,.25,.35],48);
+        sphere(student,hair,[-.29,2.54,.105],[.125,.24,.22],36);sphere(student,hair,[.28,2.57,.11],[.13,.22,.22],36);
+        for(const [x,y,z,s] of [[-.23,2.7,.18,.12],[-.12,2.78,.19,.13],[.02,2.79,.19,.13],[.16,2.74,.18,.12],[.23,2.68,.16,.1]])sphere(student,hair,[x,y,z],[s,.13,s*.75],32);
+        for(const x of [-.135,.135]){
+          sphere(student,eyeWhite,[x,2.46,.327],[.055,.068,.035],32);
+          sphere(student,iris,[x+.012,2.455,.357],[.027,.039,.02],32);
+          sphere(student,ink,[x+.014,2.455,.374],[.014,.024,.012],24);
+          sphere(student,eyeWhite,[x+.021,2.472,.384],[.008,.009,.006],16);
         }
-        const smileCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.085,2.29,.333),new THREE.Vector3(0,2.255,.35),new THREE.Vector3(.085,2.29,.333)]);
-        const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,12,.012,6,false),ink);student.add(smile);
-        sphere(student,skin,[-.355,2.4,.01],[.07,.1,.07]);sphere(student,skin,[.355,2.4,.01],[.07,.1,.07]);
-        // Arms: one supports the book, the other waves above the shoulder.
+        const browMat=mat(0x3c2922,.55);
+        for(const x of [-.14,.14]){const brow=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x-.055,2.56,.33),new THREE.Vector3(x,2.58,.35),new THREE.Vector3(x+.05,2.56,.33)]),10,.012,6,false),browMat);student.add(brow)}
+        sphere(student,skinLight,[0,2.365,.365],[.052,.082,.055],32);
+        const smileCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-.08,2.29,.337),new THREE.Vector3(0,2.265,.354),new THREE.Vector3(.08,2.29,.337)]);
+        const smile=new THREE.Mesh(new THREE.TubeGeometry(smileCurve,16,.009,6,false),ink);student.add(smile);
+        sphere(student,skin,[-.355,2.4,.005],[.07,.1,.075]);sphere(student,skin,[.355,2.4,.005],[.07,.1,.075]);
+        sphere(student,skinLight,[-.25,2.37,.285],[.07,.04,.025],24);sphere(student,skinLight,[.25,2.37,.285],[.07,.04,.025],24);
+        // One hand supports the book, while the other waves hello.
         segment(student,hoodie,[-.34,1.76,0],[-.57,1.47,.17],.15);
         segment(student,hoodie,[-.57,1.47,.17],[-.3,1.34,.4],.125);
         sphere(student,skin,[-.28,1.35,.44],[.13,.12,.09]);
+        for(let i=0;i<4;i++){const y=1.29+i*.035;segment(student,skin,[-.31,y,.515],[-.17,y+.012,.55],.018)}
         box(student,book,[-.02,1.42,.43],[.55,.68,.13]);
         box(student,pages,[-.02,1.42,.505],[.47,.58,.025]);
         box(student,book,[-.02,1.42,.526],[.035,.6,.012]);
@@ -200,15 +231,46 @@ SHELL = r"""<!doctype html>
           segment(waveArm,skin,[x,.94,.035],[x-.018,1.12-(Math.abs(1.5-i)*.025),.04],.027);
         }
         segment(waveArm,skin,[.19,.86,.04],[.27,.97,.04],.032);
-        // Floating orbital rings and a soft floor shadow ground the figure in the 3D scene.
-        const ringA=new THREE.Mesh(new THREE.TorusGeometry(1.7,.012,8,120),new THREE.MeshBasicMaterial({color:0x9ccf60,transparent:true,opacity:.58}));ringA.position.set(0,1.48,-.72);ringA.rotation.set(1.08,.12,-.22);scene.add(ringA);
-        const ringB=new THREE.Mesh(new THREE.TorusGeometry(2.05,.008,8,120),new THREE.MeshBasicMaterial({color:0x7699d9,transparent:true,opacity:.25}));ringB.position.set(0,1.48,-.9);ringB.rotation.set(.98,-.2,.18);scene.add(ringB);
-        const floor=new THREE.Mesh(new THREE.CircleGeometry(1.2,48),new THREE.MeshBasicMaterial({color:0x334520,transparent:true,opacity:.16}));floor.rotation.x=-Math.PI/2;floor.position.set(0,.025,0);floor.scale.set(1.35,.55,1);scene.add(floor);
-        const starPositions=new Float32Array(300*3);for(let i=0;i<300;i++){starPositions[i*3]=(Math.random()-.5)*7;starPositions[i*3+1]=Math.random()*4.5;starPositions[i*3+2]=-1.4-Math.random()*3}const starGeometry=new THREE.BufferGeometry();starGeometry.setAttribute('position',new THREE.BufferAttribute(starPositions,3));const stars=new THREE.Points(starGeometry,new THREE.PointsMaterial({color:0xb9c9dc,size:.018,transparent:true,opacity:.75,sizeAttenuation:true}));scene.add(stars);
+        // Solar system in the background: nested orbits, textured worlds and a glowing sun.
+        const solarSystem=new THREE.Group();solarSystem.position.set(-.58,1.58,-1.08);solarSystem.rotation.set(.22,-.08,-.08);solarSystem.scale.setScalar(.88);scene.add(solarSystem);
+        const sunMaterial=mat(0xffbd55,.32);sunMaterial.emissive=new THREE.Color(0xff8b1e);sunMaterial.emissiveIntensity=2.2;
+        const sun=new THREE.Mesh(new THREE.SphereGeometry(.29,48,32),sunMaterial);solarSystem.add(sun);
+        const sunAura=new THREE.Mesh(new THREE.SphereGeometry(.34,40,28),new THREE.MeshBasicMaterial({color:0xff9b29,transparent:true,opacity:.14,side:THREE.BackSide,depthWrite:false}));solarSystem.add(sunAura);
+        const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=128;const glowCtx=glowCanvas.getContext('2d');const glow=glowCtx.createRadialGradient(64,64,2,64,64,64);glow.addColorStop(0,'#fff9d8');glow.addColorStop(.18,'#ffd66e');glow.addColorStop(.48,'#ff9b32aa');glow.addColorStop(1,'#ff7a1e00');glowCtx.fillStyle=glow;glowCtx.fillRect(0,0,128,128);const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(glowCanvas),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.85}));sunGlow.scale.set(1.12,1.12,1);sunGlow.position.z=-.02;solarSystem.add(sunGlow);
+        const sunLight=new THREE.PointLight(0xffbd64,3.4,7,1.5);sunLight.position.set(-.58,1.58,-.5);scene.add(sunLight);
+        const orbitRadii=[.47,.66,.86,1.07,1.39,1.66,1.92,2.16];
+        const planetSpecs=[
+          {name:'Меркурій',kind:'crater',base:'#777a7e',accent:'#c2b9a7',size:.048,speed:.68},
+          {name:'Венера',kind:'banded',base:'#c9995d',accent:'#f0d09a',size:.071,speed:.48},
+          {name:'Земля',kind:'earth',base:'#1d69b6',accent:'#62a8d4',size:.083,speed:.36},
+          {name:'Марс',kind:'crater',base:'#a94f36',accent:'#e38a55',size:.064,speed:.29},
+          {name:'Юпітер',kind:'banded',base:'#c69570',accent:'#f0d9b1',size:.155,speed:.19},
+          {name:'Сатурн',kind:'banded',base:'#c1a66c',accent:'#ead9a6',size:.132,speed:.15},
+          {name:'Уран',kind:'banded',base:'#72b5bd',accent:'#c1e5e3',size:.104,speed:.115},
+          {name:'Нептун',kind:'banded',base:'#315fc0',accent:'#83b6ee',size:.103,speed:.092}
+        ];
+        const planetSystems=[];
+        planetSpecs.forEach((spec,index)=>{
+          const radius=orbitRadii[index];
+          const points=new THREE.EllipseCurve(0,0,radius,radius,0,Math.PI*2,false,0).getPoints(144).map(point=>new THREE.Vector3(point.x,point.y,0));
+          const orbitMat=new THREE.LineBasicMaterial({color:index===2?0x8bc9e5:0xb9c7dc,transparent:true,opacity:index<4?.3:.19,depthWrite:false});
+          const orbit=new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(points),orbitMat);solarSystem.add(orbit);
+          const pivot=new THREE.Group();solarSystem.add(pivot);
+          const texture=makePlanetTexture(spec.kind,spec.base,spec.accent);
+          const material=new THREE.MeshStandardMaterial({map:texture,roughness:index===4||index===5?.62:.82,metalness:.02});
+          const planet=new THREE.Mesh(new THREE.SphereGeometry(spec.size,40,28),material);planet.position.x=radius;pivot.add(planet);
+          if(index===5){const saturnRing=new THREE.Mesh(new THREE.RingGeometry(spec.size*1.34,spec.size*2.1,72),new THREE.MeshStandardMaterial({color:0xd6c396,roughness:.72,metalness:.08,transparent:true,opacity:.82,side:THREE.DoubleSide,depthWrite:false}));saturnRing.position.x=radius;saturnRing.rotation.set(.95,.12,.18);pivot.add(saturnRing)}
+          if(index===2){const moonPivot=new THREE.Group();moonPivot.position.x=radius;pivot.add(moonPivot);const moon=new THREE.Mesh(new THREE.SphereGeometry(.022,24,16),mat(0xc9c9c3,.9));moon.position.x=.12;moonPivot.add(moon);planetSystems.push({pivot:moonPivot,speed:1.35,phase:0})}
+          planetSystems.push({pivot,planet,speed:spec.speed,phase:index*.73});
+        });
+        const sunFlare=new THREE.Mesh(new THREE.TorusGeometry(.39,.006,6,100),new THREE.MeshBasicMaterial({color:0xffbd64,transparent:true,opacity:.48,depthWrite:false}));sunFlare.rotation.set(.9,.24,.32);solarSystem.add(sunFlare);
+        // Soft floor shadow keeps the student grounded in front of the orbiting scene.
+        const floor=new THREE.Mesh(new THREE.CircleGeometry(1.05,48),new THREE.MeshBasicMaterial({color:0x718443,transparent:true,opacity:.19}));floor.rotation.x=-Math.PI/2;floor.position.set(.96,.025,.26);floor.scale.set(1.22,.52,1);scene.add(floor);
+        const starPositions=new Float32Array(620*3);for(let i=0;i<620;i++){starPositions[i*3]=(Math.random()-.5)*8;starPositions[i*3+1]=Math.random()*4.8;starPositions[i*3+2]=-1.4-Math.random()*4.4}const starGeometry=new THREE.BufferGeometry();starGeometry.setAttribute('position',new THREE.BufferAttribute(starPositions,3));const stars=new THREE.Points(starGeometry,new THREE.PointsMaterial({color:0xc6d4ed,size:.017,transparent:true,opacity:.78,sizeAttenuation:true}));scene.add(stars);
         function resizeStudent(){const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
         const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         resizeStudent();window.addEventListener('resize',()=>{resizeStudent();if(reduceMotion)renderer.render(scene,camera)});
-        function drawStudent(time=0){if(!reduceMotion){waveArm.rotation.z=-.62+Math.sin(time*.004)*.22;student.rotation.y=Math.sin(time*.00055)*.045;ringA.rotation.z=-.22+time*.000045;ringB.rotation.z=.18-time*.000025;stars.rotation.y=Math.sin(time*.00012)*.035}renderer.render(scene,camera);if(!reduceMotion)requestAnimationFrame(drawStudent)}
+        function drawStudent(time=0){if(!reduceMotion){waveArm.rotation.z=-.62+Math.sin(time*.004)*.19;student.rotation.y=Math.sin(time*.00055)*.025;sun.rotation.y=time*.00018;sunFlare.rotation.z=.32+time*.00011;planetSystems.forEach(system=>{system.pivot.rotation.z=system.phase+time*.00012*system.speed;if(system.planet)system.planet.rotation.y=time*.00022});stars.rotation.y=Math.sin(time*.00012)*.035}renderer.render(scene,camera);if(!reduceMotion)requestAnimationFrame(drawStudent)}
         requestAnimationFrame(drawStudent);
       }catch(error){studentCanvas.hidden=true;if(fallback)fallback.hidden=false}};
       import('https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js').then(renderStudent).catch(()=>{studentCanvas.hidden=true;if(fallback)fallback.hidden=false});
@@ -290,7 +352,7 @@ def index():
           <div class="student-stage" role="img" aria-label="Анімований 3D-учень махає рукою та тримає синю книжку">
             <canvas id="student-scene" aria-hidden="true"></canvas>
             <div class="student-fallback" hidden><span class="fallback-student">🧑‍🎓</span><span class="fallback-wave">👋</span><span class="fallback-book">📘</span></div>
-            <span class="student-stage-caption" aria-hidden="true">РОЗУМНИК <i>·</i> ПРИВІТ, СВІТ!</span>
+            <span class="student-stage-caption" aria-hidden="true">СОНЯЧНА СИСТЕМА <i>·</i> 3D ВСЕСВІТ</span>
           </div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}

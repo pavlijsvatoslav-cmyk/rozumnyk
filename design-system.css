@@ -349,7 +349,7 @@ main { perspective: 1500px; }
 .student-copy .stats { flex-wrap:wrap; gap:20px; color:#aeb6aa; }
 .student-copy .stats strong { color:#fff; font-size:18px; }
 .student-nmt { margin:15px 0 0; color:#d4e6b1; font-size:12px; }
-.student-stage { position:relative; isolation:isolate; min-width:0; width:100%; height:410px; overflow:hidden; border:1px solid #59644a45; border-radius:22px; background:radial-gradient(ellipse at 53% 68%,#28351d99 0,transparent 44%),radial-gradient(ellipse at 50% 50%,#111a16 0,#090c0b 62%,#050706 100%); box-shadow:inset 0 1px #ffffff12,0 20px 42px #0005; }
+.student-stage { position:relative; isolation:isolate; min-width:0; width:100%; height:410px; overflow:hidden; border:1px solid #59644a45; border-radius:22px; background:radial-gradient(ellipse at 26% 42%,#b27a2930 0,transparent 28%),radial-gradient(ellipse at 67% 67%,#24351b88 0,transparent 42%),radial-gradient(ellipse at 50% 50%,#0d1216 0,#06090b 62%,#020304 100%); box-shadow:inset 0 1px #ffffff12,0 20px 42px #0005; }
 .student-stage::before { content:""; position:absolute; z-index:-1; left:18%; right:18%; bottom:4%; height:26%; border-radius:50%; background:radial-gradient(ellipse,#8eb74235,transparent 70%); filter:blur(5px); }
 #student-scene { position:absolute; inset:0; display:block; width:100%; height:100%; }
 #student-scene[hidden] { display:none!important; }
