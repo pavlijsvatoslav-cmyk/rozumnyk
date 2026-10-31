@@ -4,6 +4,86 @@ from curriculum import GRADES
 
 app = Flask(__name__)
 
+CAREER_CATEGORIES = {
+    "stem": {
+        "name": "Технології й точні науки",
+        "professions": "розробник програмного забезпечення, інженер, аналітик даних, фахівець із кібербезпеки, робототехнік",
+        "after9": "Придивись до STEM-профілю в академічному ліцеї або до професійного чи фахового коледжу з ІТ, електроніки, автоматизації чи технічного дизайну.",
+        "after12": "Можна дослідити бакалаврські програми з комп’ютерних наук, інженерії, математики, фізики або кібербезпеки; для частини напрямів корисні власні проєкти й портфоліо.",
+    },
+    "health": {
+        "name": "Здоров’я й природничі науки",
+        "professions": "біолог, еколог, лабораторний фахівець, фармацевт, лікар, ветеринарний лікар",
+        "after9": "Поглянь на природничий профіль ліцею або на програми професійного й фахового коледжу з лабораторної справи, екології чи догляду за здоров’ям; перевір конкретні умови вступу.",
+        "after12": "Можна порівняти програми з біології, екології, фармації, ветеринарії та медицини. Для медичних професій потрібна відповідна тривала освіта й виконання вимог до вступу.",
+    },
+    "creative": {
+        "name": "Творчість, дизайн і комунікації",
+        "professions": "графічний або UX/UI-дизайнер, архітектор, ілюстратор, фотограф, редактор, фахівець із медіа",
+        "after9": "Розглянь мистецький або мовно-літературний профіль ліцею, художній чи фаховий коледж. Для творчих програм заздалегідь перевір, чи потрібен творчий конкурс або портфоліо.",
+        "after12": "Можна обрати дизайн, архітектуру, медіа, журналістику, видавничу справу чи мистецтво у фаховому коледжі або закладі вищої освіти; поступово збирай портфоліо.",
+    },
+    "people": {
+        "name": "Люди, освіта й суспільство",
+        "professions": "учитель, психолог, соціальний працівник, юрист, перекладач, фахівець із комунікацій",
+        "after9": "Можна обрати соціально-гуманітарний чи мовний профіль ліцею або дізнатися про програми фахового коледжу з освіти, соціальної роботи, мов і комунікацій.",
+        "after12": "Порівняй програми з педагогіки, психології, права, соціальної роботи, мов або комунікацій. Для професій психолога, учителя чи юриста перевір вимоги до освіти й кваліфікації.",
+    },
+    "business": {
+        "name": "Бізнес, економіка й організація",
+        "professions": "підприємець, економіст, бухгалтер, маркетолог, логіст, проєктний менеджер",
+        "after9": "Придивись до соціально-гуманітарного профілю, а також до програм професійного чи фахового коледжу з обліку, підприємництва, торгівлі або логістики.",
+        "after12": "Можна порівняти програми з економіки, фінансів, менеджменту, маркетингу, підприємництва й логістики у фахових коледжах або університетах.",
+    },
+    "practical": {
+        "name": "Технічні професії й майстерність",
+        "professions": "електрик, механік, кухар, зварювальник, будівельник, майстер з обслуговування техніки",
+        "after9": "Професійний коледж або заклад професійної освіти дає змогу поєднати загальну освіту з опануванням професії. Також можна продовжити навчання в ліцеї, якщо хочеться ще дослідити інтереси.",
+        "after12": "Можна здобути професійну кваліфікацію, вступити до фахового коледжу або обрати інженерну програму. Дивись на практику, обладнання майстерень і партнерства закладу з роботодавцями.",
+    },
+}
+
+CAREER_QUESTION_PROMPTS = [
+    "Яке завдання тобі найцікавіше взятися виконувати?",
+    "Яку роль ти найчастіше обираєш у командному проєкті?",
+    "Які задачі дають тобі відчуття «хочу розібратися»?",
+    "Який результат роботи приносив би найбільше задоволення?",
+    "Що ти охочіше робитимеш у вільний час?",
+    "Який шкільний проєкт ти обрав/обрала б за власним бажанням?",
+    "Який тип проблем тобі цікаво розв’язувати?",
+    "Яке вміння хотілося б розвинути найбільше?",
+    "У якому середовищі тобі комфортніше працювати?",
+    "Що для тебе найважливіше у майбутній справі?",
+    "Який результат роботи ти хотів/хотіла б побачити наприкінці дня?",
+    "Який короткий пробний проєкт ти обрав/обрала б цього місяця?",
+]
+
+CAREER_OPTION_BANK = {
+    "stem": [
+        "Розкласти складну задачу на частини й знайти закономірність.", "Продумати, як працює застосунок, пристрій або система.", "Дослідити дані й перевірити, яке пояснення підтверджується фактами.", "Скласти алгоритм і перевірити його на різних прикладах.", "Зібрати прототип і вдосконалити його після випробування.", "Знайти технічну помилку та зрозуміти її причину.", "Побачити, як математична модель пояснює реальне явище.", "Дізнатися, як захищають інформацію та цифрові системи.", "Порівняти кілька рішень за точністю й ефективністю.", "Створити цифровий інструмент, який полегшує чиюсь роботу.", "Працювати з конструктором, кодом або електронікою.", "Дослідити, як поєднати технології та користь для людей.",
+    ],
+    "health": [
+        "З’ясувати, чому відбувається природне явище.", "Дослідити живі організми, їхню будову й середовище.", "Зрозуміти, як турбота про здоров’я впливає на життя людини.", "Провести безпечне спостереження й точно записати результат.", "Дізнатися, як працює організм або екосистема.", "Порівняти наукові пояснення й відрізнити факти від міфів.", "Подумати, як зменшити шкоду довкіллю.", "Упорядкувати результати дослідження та зробити висновок.", "Зрозуміти, як ліки чи матеріали проходять дослідження.", "Знайти спосіб зробити громаду здоровішою та безпечнішою.", "Дослідити зв’язки між живими організмами.", "Поставити запитання й шукати на нього доказову відповідь.",
+    ],
+    "creative": [
+        "Придумати образ, історію або візуальну ідею.", "Створити афішу, відео, комікс чи сторінку.", "Пояснити складну думку зрозумілим і красивим способом.", "Добирати кольори, форму, музику або слова для настрою.", "Вигадати назву й стиль для нового проєкту.", "Редагувати текст, щоб він звучав виразно й точно.", "Знімати фото або відео й розповідати ними історію.", "Перетворювати начерк на готовий творчий продукт.", "Досліджувати мистецькі стилі та надихатися ними.", "Створити зручний і привабливий дизайн речі чи простору.", "Показати ідею аудиторії через презентацію або виставку.", "Поєднати творчість із технологіями та новими медіа.",
+    ],
+    "people": [
+        "Допомогти команді домовитися й почути різні думки.", "Пояснити комусь тему або підтримати під час навчання.", "Розібрати життєву ситуацію та знайти справедливе рішення.", "Поставити запитання й уважно вислухати людину.", "Захищати права й гідність людей за правилами.", "Перекладати або знаходити спільну мову між культурами.", "Організувати добру справу для школи чи громади.", "Пояснити, як історія впливає на сучасне суспільство.", "Допомогти розв’язати конфлікт спокійно й чесно.", "Ділитися знаннями й бачити, як інші зростають.", "Писати тексти, що інформують і допомагають зрозуміти подію.", "Дізнатися, як зробити послуги й правила доступнішими для всіх.",
+    ],
+    "business": [
+        "Скласти план і довести командну справу до результату.", "Порівняти варіанти й вирішити, який дає найбільшу користь.", "Продумати корисну послугу або товар для людей.", "Спланувати бюджет і стежити, на що витрачаються кошти.", "Організувати подію, розподілити ролі й час.", "З’ясувати, що потрібно клієнтам або громаді.", "Переконливо презентувати ідею та відповісти на запитання.", "Упорядкувати документи, дані або робочі процеси.", "Продумати, як доставити потрібну річ у потрібне місце.", "Знайти, як зробити невелику справу ефективнішою.", "Працювати з цифрами й пояснювати, що вони означають.", "Створити проєкт, який має і користь, і чіткий план.",
+    ],
+    "practical": [
+        "Зібрати або полагодити річ і перевірити, чи вона працює.", "Працювати руками з інструментами й матеріалами.", "Приготувати страву, дотримуючись послідовності та якості.", "Змонтувати деталі за схемою й правилами безпеки.", "Побачити практичну проблему й одразу спробувати її вирішити.", "Вдосконалити механізм, меблі або побутовий предмет.", "Навчитися користуватися обладнанням і доглядати за ним.", "Створити корисну річ за кресленням або власним задумом.", "Працювати в майстерні, лабораторії, кухні чи на об’єкті.", "Опанувати професійну техніку через практичні вправи.", "Перевірити якість виробу й знайти, що треба виправити.", "Бачити конкретний результат своєї роботи наприкінці дня.",
+    ],
+}
+
+CAREER_QUESTIONS = [
+    {"prompt": prompt, "choices": [(key, CAREER_OPTION_BANK[key][index]) for key in CAREER_CATEGORIES]}
+    for index, prompt in enumerate(CAREER_QUESTION_PROMPTS)
+]
+
 SHELL = r"""<!doctype html>
 <html lang="uk">
 <head>
@@ -32,17 +112,19 @@ SHELL = r"""<!doctype html>
     @keyframes appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes rise{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -9px}}@keyframes drift{to{translate:-25px 18px;scale:1.08}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
     @media(max-width:800px){.hero{grid-template-columns:1fr;padding:38px 32px}.hero-visual{height:180px}.subject-grid,.progress-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:540px){.topbar{height:67px;padding:0 12px}.top-actions{gap:6px}.progress-link{font-size:10px}.grade-switch a{min-width:37px;padding:6px 5px;font-size:10px}main{padding:8px 16px 55px}.hero{padding:30px 22px;min-height:0}.hero h1{font-size:42px}.hero-visual{height:155px}.planet{width:112px;height:112px;font-size:43px}.orbit{width:175px;height:175px}.chip-a{right:0}.chip-c{left:0}.stats{gap:16px}.section-head{margin-top:34px}.section-head h2{font-size:23px}.subject-grid,.progress-grid{grid-template-columns:1fr;gap:10px}.subject-card{min-height:158px;padding:15px 16px}.subject-banner{padding:22px 18px;gap:13px}.subject-banner h1{font-size:25px}.subject-banner .subject-icon{width:48px;height:48px;font-size:23px}.lesson-panel,.quiz{padding:19px}.lesson-row{padding:12px 11px;gap:10px}.lesson-title{font-size:12px}.lesson-nav{gap:12px}}
     .hero-visual{perspective:850px;transform-style:preserve-3d}.orbit{transform-style:preserve-3d}.orbit.orbit-tilt{transform:rotateX(68deg) rotateY(-16deg);animation:orbit3d 24s linear infinite}.planet{transform-style:preserve-3d;animation:bob 4s ease-in-out infinite,planet3d 16s ease-in-out infinite}.float-chip{transform:translateZ(22px)}.subject-card{transform-style:preserve-3d;perspective:700px}.subject-card:hover{transform:translateY(-7px) rotateX(2deg) rotateY(-2deg)}
-    .nmt-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:22px 0;padding:22px 25px;border-radius:18px;background:linear-gradient(120deg,#263b35,#395d50);color:white;box-shadow:0 14px 34px #233b3225;animation:appear .5s both}.nmt-banner h2{margin:0 0 7px;font-size:21px}.nmt-banner p{margin:0;color:#e1ede4;font-size:12px;line-height:1.6}.nmt-banner .eyebrow{color:#c7e5b1}.nmt-banner .button{flex:none;background:#c7e5b1;color:#20352d}.nmt-badge{display:inline-flex;margin:7px 0 0;padding:4px 8px;border-radius:20px;background:#edf3e8;color:#34594c;font-size:9px;font-weight:850;letter-spacing:.02em}.nmt-subject-note{margin:0 0 18px;padding:12px 16px;background:#eef3e9;border-left:4px solid #4d7465;border-radius:8px;color:#47594f;font-size:12px}.nmt-tip{border-color:#d8e8d3;background:linear-gradient(135deg,#f2f8ef,#fff)}
+    .nmt-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:22px 0;padding:22px 25px;border-radius:18px;background:linear-gradient(120deg,#263b35,#395d50);color:white;box-shadow:0 14px 34px #233b3225;animation:appear .5s both}.nmt-banner h2{margin:0 0 7px;font-size:21px}.nmt-banner p{margin:0;color:#e1ede4;font-size:12px;line-height:1.6}.nmt-banner .eyebrow{color:#c7e5b1}.nmt-banner .button{flex:none;background:#c7e5b1;color:#20352d}.nmt-badge{display:inline-flex;margin:7px 0 0;padding:4px 8px;border-radius:20px;background:#edf3e8;color:#34594c;font-size:9px;font-weight:850;letter-spacing:.02em}.nmt-subject-note{margin:0 0 18px;padding:12px 16px;background:#eef3e9;border-left:4px solid #4d7465;border-radius:8px;color:#47594f;font-size:12px}.nmt-tip{border-color:#d8e8d3;background:linear-gradient(135deg,#f2f8ef,#fff)}.career-link{font-size:11px;text-decoration:none;color:var(--green);font-weight:800;white-space:nowrap}.career-link:hover{text-decoration:underline}
+    .career-banner{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 23px;margin:20px 0;border:1px solid #e2e6dc;border-radius:16px;background:linear-gradient(110deg,#f2f4eb,#f1edfb)}.career-banner h2{font-size:17px;margin:0 0 4px}.career-banner p:not(.eyebrow){font-size:12px;color:#58655d;margin:0}.career-banner .button{flex:none}
+    .career-hero{padding:28px 32px;border-radius:22px;background:linear-gradient(125deg,#e5eee5,#f1eaff);animation:appear .45s both}.career-hero h1{font-size:clamp(30px,5vw,44px);letter-spacing:-.05em;margin:3px 0 9px}.career-hero p{max-width:800px;color:#53635a;font-size:13px;margin:0}.career-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin:18px 0}.career-card,.career-result{padding:18px;border:1px solid var(--line);border-radius:15px;background:white;box-shadow:0 5px 18px #24332808}.career-card h3,.career-result h3{font-size:15px;margin:0 0 8px}.career-card p,.career-result p{font-size:12px;color:#56645a;margin:0 0 8px;line-height:1.55}.career-paths{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin:16px 0}.career-path{padding:19px;border-radius:16px;background:#fff;border:1px solid var(--line)}.career-path h3{margin:0 0 8px;font-size:16px}.career-path p,.career-path li{font-size:12px;color:#58655d;line-height:1.55}.career-path ul{padding-left:19px;margin:8px 0}.career-test{margin-top:24px;padding:23px;border:1px solid var(--line);border-radius:18px;background:white}.career-test h2{font-size:22px;margin:0 0 7px}.career-test>p{font-size:12px;color:var(--muted)}.career-stage{display:flex;gap:12px;flex-wrap:wrap;padding:14px;margin:15px 0;background:#f6f8f3;border-radius:12px}.career-stage label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700}.career-question{padding:15px 0;border-top:1px solid #edf0e9}.career-question h3{font-size:13px;margin:0 0 8px}.career-option{display:flex;gap:9px;align-items:flex-start;margin:6px 0;padding:9px 11px;border:1px solid #ecefe8;border-radius:10px;font-size:11px;color:#526157;cursor:pointer}.career-option:hover{background:#f7f9f5;border-color:#bfd0c3}.career-option input{accent-color:#4d7465;flex:none;margin-top:2px}.career-results{margin:20px 0;padding:20px;border-radius:17px;background:linear-gradient(135deg,#eef5e8,#f6f1ff)}.career-results h2{margin:0 0 8px}.career-results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.career-links{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}.career-links a{font-size:12px;color:var(--green);font-weight:800}
     @keyframes planet3d{0%,100%{transform:rotateX(-13deg) rotateY(-15deg) rotateZ(-8deg)}50%{transform:rotateX(14deg) rotateY(165deg) rotateZ(8deg)}}@keyframes orbit3d{to{transform:rotateX(68deg) rotateY(-16deg) rotateZ(360deg)}}
-    @media(max-width:800px){.nmt-banner{align-items:flex-start;flex-direction:column}.nmt-banner .button{align-self:flex-start}}
-    @media(max-width:540px){.topbar{height:auto;min-height:67px;flex-wrap:wrap;gap:8px;padding:8px 12px}.top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.grade-switch{max-width:100%;overflow-x:auto}.grade-switch a{min-width:34px;padding:6px 5px;font-size:10px}.nmt-banner{padding:18px}.nmt-banner h2{font-size:18px}}
+    @media(max-width:800px){.nmt-banner{align-items:flex-start;flex-direction:column}.nmt-banner .button{align-self:flex-start}.career-grid{grid-template-columns:repeat(2,1fr)}.career-banner{align-items:flex-start;flex-direction:column}}
+    @media(max-width:540px){.topbar{height:auto;min-height:67px;flex-wrap:wrap;gap:8px;padding:8px 12px}.top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.grade-switch{max-width:100%;overflow-x:auto}.grade-switch a{min-width:34px;padding:6px 5px;font-size:10px}.nmt-banner{padding:18px}.nmt-banner h2{font-size:18px}.career-grid,.career-paths,.career-results-grid{grid-template-columns:1fr}.career-hero{padding:22px 19px}.career-test{padding:17px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.subject-card:hover{transform:none!important}}
   </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">Р</span><span>Розумник<small>твій простір для відкриттів</small></span></a>
-    <div class="top-actions"><a class="progress-link" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
+    <div class="top-actions"><a class="career-link" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="progress-link" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
   <main>{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
@@ -103,6 +185,7 @@ def index():
           <div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="orbit orbit-tilt"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div>
         </section>
         {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
+        <section class="career-banner"><div><p class="eyebrow">ПЛАНУЙ НАСТУПНИЙ КРОК</p><h2>Ще обираєш, куди рухатися після школи?</h2><p>Порівняй освітні шляхи після 9-го та 12-го класу й пройди короткий тест на інтереси.</p></div><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Дізнатися про напрями　→</a></section>
         <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
         <section class="subject-grid">
           {% for subject in subjects %}
@@ -227,6 +310,121 @@ def progress_page():
         """,
         subjects=GRADES[grade],
         grade=grade,
+    )
+
+
+@app.route("/career-guide", methods=["GET", "POST"])
+def career_guide():
+    stage = request.form.get("stage", "after9") if request.method == "POST" else request.args.get("stage", "after9")
+    if stage not in ("after9", "after12"):
+        stage = "after9"
+
+    submitted = False
+    error_message = ""
+    results = []
+    if request.method == "POST":
+        selected = [request.form.get(f"q{index}", "") for index in range(len(CAREER_QUESTIONS))]
+        if any(answer not in CAREER_CATEGORIES for answer in selected):
+            error_message = "Будь ласка, обери по одній відповіді в кожному запитанні."
+        else:
+            scores = {key: 0 for key in CAREER_CATEGORIES}
+            for answer in selected:
+                scores[answer] += 1
+            best = sorted(CAREER_CATEGORIES, key=lambda key: scores[key], reverse=True)
+            best = [key for key in best if scores[key] > 0][:2]
+            results = [
+                {
+                    "name": CAREER_CATEGORIES[key]["name"],
+                    "professions": CAREER_CATEGORIES[key]["professions"],
+                    "pathway": CAREER_CATEGORIES[key][stage],
+                    "points": scores[key],
+                }
+                for key in best
+            ]
+            submitted = True
+
+    questions = [
+        {"prompt": question["prompt"], "choices": question["choices"], "index": index}
+        for index, question in enumerate(CAREER_QUESTIONS)
+    ]
+    return show_page(
+        "Профорієнтація",
+        """
+        <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　Профорієнтація</nav>
+        <section class="career-hero">
+          <p class="eyebrow">ТВОЇ ІНТЕРЕСИ · ТВОЇ МОЖЛИВОСТІ</p>
+          <h1>Куди рухатися далі?</h1>
+          <p>Подивись на освітні шляхи після 9-го й 12-го класу, а потім пройди тест із 12 запитань. Він підкаже, які напрями й професії можуть тобі відгукнутися.</p>
+        </section>
+
+        <div class="career-paths">
+          <article class="career-path">
+            <p class="eyebrow">ПІСЛЯ 9 КЛАСУ</p><h3>Можна продовжити різними шляхами</h3>
+            <ul>
+              <li><strong>Академічний ліцей:</strong> продовжити навчання, обрати профіль і готуватися до подальшого вступу. Мережа ліцеїв розгортається поступово, тож перевір, які варіанти є у твоїй громаді.</li>
+              <li><strong>Професійний коледж або заклад професійної освіти:</strong> поєднати загальну освіту з опануванням практичної професії.</li>
+              <li><strong>Фаховий коледж:</strong> дізнатися про прикладні програми та конкретні правила вступу для випускників 9 класу.</li>
+            </ul>
+            <p>Порівняй предмети, практику, гуртожиток, дорогу й умови вступу — не лише назву закладу.</p>
+          </article>
+          <article class="career-path">
+            <p class="eyebrow">ПІСЛЯ 12 КЛАСУ</p><h3>Обирай, як поглибити підготовку</h3>
+            <ul>
+              <li><strong>Університет:</strong> бакалаврська програма за напрямом, який хочеш досліджувати глибше.</li>
+              <li><strong>Фаховий коледж:</strong> прикладна спеціальність і багато практичного навчання.</li>
+              <li><strong>Професійна освіта, робота або власний проєкт:</strong> здобути кваліфікацію, спробувати сферу й надалі продовжити навчання.</li>
+            </ul>
+            <p>Вступні вимоги, НМТ, творчі конкурси та строки щороку перевіряй на офіційних сторінках обраних закладів.</p>
+          </article>
+        </div>
+
+        {% if submitted %}
+        <section class="career-results" aria-live="polite">
+          <p class="eyebrow">ТВОЇ ВІДПОВІДІ — ЦЕ ПІДКАЗКА, НЕ ВИРОК</p>
+          <h2>Можуть відгукнутися ці напрями</h2>
+          <p>Тест показує, які заняття ти обирав/обирала частіше. Це не оцінка здібностей і не остаточне рішення про професію.</p>
+          <div class="career-results-grid">
+            {% for result in results %}
+            <article class="career-result">
+              <p class="eyebrow">{{ result.points }} із 12 відповідей</p>
+              <h3>{{ result.name }}</h3>
+              <p><strong>Приклади професій:</strong> {{ result.professions }}.</p>
+              <p><strong>Можливий наступний крок:</strong> {{ result.pathway }}</p>
+            </article>
+            {% endfor %}
+          </div>
+          <p>Обговори результати з рідними, учителем або кар’єрним радником. Спробуй короткий гурток, курс, волонтерство чи невеликий проєкт, щоб перевірити, чи подобається тобі ця сфера на практиці.</p>
+        </section>
+        {% endif %}
+
+        {% if error_message %}<div class="quiz-message try">{{ error_message }}</div>{% endif %}
+        <form class="career-test" method="post" action="{{ url_for('career_guide', grade=grade) }}">
+          <h2>Тест на професійні інтереси</h2>
+          <p>У кожному запитанні обери варіант, який найбільше схожий на тебе. Тут немає правильних чи неправильних відповідей.</p>
+          <fieldset class="career-stage"><legend><strong>Для якого наступного кроку шукаєш ідеї?</strong></legend>
+            <label><input type="radio" name="stage" value="after9" {% if stage == 'after9' %}checked{% endif %}> Після 9 класу</label>
+            <label><input type="radio" name="stage" value="after12" {% if stage == 'after12' %}checked{% endif %}> Після 12 класу</label>
+          </fieldset>
+          {% for question in questions %}{% set question_index = loop.index0 %}
+          <fieldset class="career-question"><legend><h3>{{ loop.index }}. {{ question.prompt }}</h3></legend>
+            {% for category, option_text in question.choices %}<label class="career-option"><input type="radio" name="q{{ question_index }}" value="{{ category }}" required> <span>{{ option_text }}</span></label>{% endfor %}
+          </fieldset>
+          {% endfor %}
+          <button class="button" type="submit">Побачити підказку за відповідями　→</button>
+        </form>
+        <div class="career-links">
+          <a href="https://mon.gov.ua/news/de-navchatymutsia-starshoklasnyky-znaidit-svii-akademichnyi-litsei-u-hromadi" target="_blank" rel="noopener">Знайти академічний ліцей у громаді ↗</a>
+          <a href="https://proftech.mon.gov.ua/" target="_blank" rel="noopener">Дізнатися про професійну освіту ↗</a>
+          <a href="https://mon.gov.ua/osvita-2/vishcha-osvita-ta-osvita-doroslikh/vstupna-kampaniia-do-zvo/vstupna-kampaniia-do-zakladiv-vyshchoi-osvity-2026-roku/poriadok-pryiomu-dlia-zdobuttia-vyshchoi-osvity-v-2026-rotsi" target="_blank" rel="noopener">Правила вступу до університетів ↗</a>
+        </div>
+        <aside class="note"><span>ℹ️</span><p>Профорієнтаційний тест не визначає майбутнє та не замінює розмову з фахівцем. Навчальні траєкторії й правила вступу залежать від року, програми закладу та місцевої мережі. Перевіряй актуальну інформацію в закладі освіти й на сайтах МОН та ЄДЕБО.</p></aside>
+        """,
+        grade=active_grade(),
+        stage=stage,
+        questions=questions,
+        results=results,
+        submitted=submitted,
+        error_message=error_message,
     )
 
 
