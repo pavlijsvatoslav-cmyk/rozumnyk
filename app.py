@@ -311,7 +311,6 @@ def index():
         subjects=subjects,
         grade=grade,
         lesson_count=lesson_count,
-        class_summaries=class_summaries,
     )
 
 
