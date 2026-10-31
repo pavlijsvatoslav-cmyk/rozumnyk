@@ -132,11 +132,12 @@ SHELL = r"""<!doctype html>
   <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">До основного вмісту</a>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">Р</span><span>Розумник<small>твій простір для відкриттів</small></span></a>
   <div class="top-actions"><a class="career-link" data-i18n="careers" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="utility-link" data-i18n="tools" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a><a class="progress-link" data-i18n="progress" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><div class="access-tools"><button class="access-button" type="button" data-font="increase" aria-label="Збільшити шрифт">A+</button><button class="access-button" type="button" data-contrast aria-label="Контрастний режим">◐</button><button class="access-button" type="button" data-speak aria-label="Озвучити сторінку">🔊</button><button class="access-button" type="button" data-language>UA/EN</button></div><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
-  <main>{{ content|safe }}</main>
+  <main id="main-content" tabindex="-1">{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
   <script>
     const studentCanvas=document.querySelector('#student-scene');
