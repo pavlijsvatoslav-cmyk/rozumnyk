@@ -10,12 +10,12 @@ SHELL = r"""<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f7f2">
-  <meta name="description" content="Розумник — зрозумілі навчальні теми, приклади, вправи й контрольні для учнів 5–9 класів.">
+  <meta name="description" content="Розумник — зрозумілі навчальні теми, приклади, вправи й контрольні для учнів 5–11 класів.">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="uk_UA">
   <meta property="og:site_name" content="Розумник">
   <meta property="og:title" content="{{ title }} · Розумник">
-  <meta property="og:description" content="Навчайся у своєму темпі: уроки, приклади й перевірка знань для 5–9 класів.">
+  <meta property="og:description" content="Навчайся у своєму темпі: уроки, приклади й перевірка знань для 5–11 класів.">
   <meta name="twitter:card" content="summary">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <title>{{ title }} · Розумник</title>
@@ -31,13 +31,18 @@ SHELL = r"""<!doctype html>
     footer{padding:23px;text-align:center;color:#89938d;font-size:10px;border-top:1px solid #e8e9e1}.reveal{opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}.reveal.visible{opacity:1;transform:none}
     @keyframes appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes rise{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -9px}}@keyframes drift{to{translate:-25px 18px;scale:1.08}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
     @media(max-width:800px){.hero{grid-template-columns:1fr;padding:38px 32px}.hero-visual{height:180px}.subject-grid,.progress-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:540px){.topbar{height:67px;padding:0 12px}.top-actions{gap:6px}.progress-link{font-size:10px}.grade-switch a{min-width:37px;padding:6px 5px;font-size:10px}main{padding:8px 16px 55px}.hero{padding:30px 22px;min-height:0}.hero h1{font-size:42px}.hero-visual{height:155px}.planet{width:112px;height:112px;font-size:43px}.orbit{width:175px;height:175px}.chip-a{right:0}.chip-c{left:0}.stats{gap:16px}.section-head{margin-top:34px}.section-head h2{font-size:23px}.subject-grid,.progress-grid{grid-template-columns:1fr;gap:10px}.subject-card{min-height:158px;padding:15px 16px}.subject-banner{padding:22px 18px;gap:13px}.subject-banner h1{font-size:25px}.subject-banner .subject-icon{width:48px;height:48px;font-size:23px}.lesson-panel,.quiz{padding:19px}.lesson-row{padding:12px 11px;gap:10px}.lesson-title{font-size:12px}.lesson-nav{gap:12px}}
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    .hero-visual{perspective:850px;transform-style:preserve-3d}.orbit{transform-style:preserve-3d}.orbit.orbit-tilt{transform:rotateX(68deg) rotateY(-16deg);animation:orbit3d 24s linear infinite}.planet{transform-style:preserve-3d;animation:bob 4s ease-in-out infinite,planet3d 16s ease-in-out infinite}.float-chip{transform:translateZ(22px)}.subject-card{transform-style:preserve-3d;perspective:700px}.subject-card:hover{transform:translateY(-7px) rotateX(2deg) rotateY(-2deg)}
+    .nmt-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:22px 0;padding:22px 25px;border-radius:18px;background:linear-gradient(120deg,#263b35,#395d50);color:white;box-shadow:0 14px 34px #233b3225;animation:appear .5s both}.nmt-banner h2{margin:0 0 7px;font-size:21px}.nmt-banner p{margin:0;color:#e1ede4;font-size:12px;line-height:1.6}.nmt-banner .eyebrow{color:#c7e5b1}.nmt-banner .button{flex:none;background:#c7e5b1;color:#20352d}.nmt-badge{display:inline-flex;margin:7px 0 0;padding:4px 8px;border-radius:20px;background:#edf3e8;color:#34594c;font-size:9px;font-weight:850;letter-spacing:.02em}.nmt-subject-note{margin:0 0 18px;padding:12px 16px;background:#eef3e9;border-left:4px solid #4d7465;border-radius:8px;color:#47594f;font-size:12px}.nmt-tip{border-color:#d8e8d3;background:linear-gradient(135deg,#f2f8ef,#fff)}
+    @keyframes planet3d{0%,100%{transform:rotateX(-13deg) rotateY(-15deg) rotateZ(-8deg)}50%{transform:rotateX(14deg) rotateY(165deg) rotateZ(8deg)}}@keyframes orbit3d{to{transform:rotateX(68deg) rotateY(-16deg) rotateZ(360deg)}}
+    @media(max-width:800px){.nmt-banner{align-items:flex-start;flex-direction:column}.nmt-banner .button{align-self:flex-start}}
+    @media(max-width:540px){.topbar{height:auto;min-height:67px;flex-wrap:wrap;gap:8px;padding:8px 12px}.top-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}.grade-switch{max-width:100%;overflow-x:auto}.grade-switch a{min-width:34px;padding:6px 5px;font-size:10px}.nmt-banner{padding:18px}.nmt-banner h2{font-size:18px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.subject-card:hover{transform:none!important}}
   </style>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">Р</span><span>Розумник<small>твій простір для відкриттів</small></span></a>
-    <div class="top-actions"><a class="progress-link" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 10) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
+    <div class="top-actions"><a class="progress-link" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
   <main>{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня</footer>
@@ -91,23 +96,24 @@ def index():
           <div>
             <p class="eyebrow">ПРИВІТ, ДОСЛІДНИКУ!</p>
             <h1>Навчайся.<br><em>Відкривай.</em><br>Зростай.</h1>
-            <p class="intro">Твій дружній навчальний простір для {{ grade }} класу. Обирай тему, розбирайся крок за кроком і перевіряй себе.</p>
+            <p class="intro">{% if grade == 11 %}Твій простір для підготовки до НМТ: систематизуй теми, тренуй тестові завдання й відстежуй прогрес.{% else %}Твій дружній навчальний простір для {{ grade }} класу. Обирай тему, розбирайся крок за кроком і перевіряй себе.{% endif %}</p>
             <a class="button" href="#subjects">Знайти свій предмет <span>↘</span></a>
             <div class="stats"><span><strong>{{ subjects|length }}</strong> навчальних напрямів</span><span><strong>{{ lesson_count }}</strong> тем для дослідження</span><span><strong data-total-done>0</strong> уже опрацьовано</span></div>
           </div>
-          <div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div>
+          <div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="orbit orbit-tilt"></div><div class="planet">✦</div><div class="float-chip chip-a">✨ цікаві теми</div><div class="float-chip chip-b">🌱 твій темп</div><div class="float-chip chip-c">📚 {{ grade }} клас</div></div>
         </section>
+        {% if grade == 11 %}<section class="nmt-banner"><div><p class="eyebrow">ФОКУС 11 КЛАСУ</p><h2>Готуємося до НМТ крок за кроком</h2><p>Обов’язкова база: українська мова, математика (алгебра й геометрія), історія України. Для предмета на вибір у тренажері є англійська (іноземна мова), українська література, біологія, географія, фізика та хімія. У кожній темі — 12 запитань і підказка для підготовки.</p></div><a class="button" href="{{ url_for('subject_page', slug='ukr-mova', grade=grade) }}">Почати з української мови　→</a></section>{% endif %}
         <div class="section-head" id="subjects"><div><p class="eyebrow">ОБИРАЙ, ЩО ЦІКАВО</p><h2>Предмети · {{ grade }} клас</h2></div><p>Почни з будь-якої теми →</p></div>
         <section class="subject-grid">
           {% for subject in subjects %}
           <a class="subject-card" style="--i:{{ loop.index0 }}" href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">
             <div class="card-head"><span class="subject-icon">{{ subject.icon }}</span><span class="arrow">↗</span></div>
-            <h3>{{ subject.name }}</h3><p>{{ subject.description }}</p>{% if subject.reference_book %}<small class="reference-book">📚 {{ subject.reference_book }}</small>{% endif %}
+            <h3>{{ subject.name }}</h3><p>{{ subject.description }}</p>{% if subject.nmt_role %}<small class="nmt-badge">НМТ · {{ subject.nmt_role }}</small>{% endif %}{% if subject.reference_book %}<small class="reference-book">📚 {{ subject.reference_book }}</small>{% endif %}
             <div class="card-meta"><span>{{ subject.lessons|length }} теми</span><span class="mini-progress" data-progress-subject="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}">0 / {{ subject.lessons|length }} тем</span></div>
           </a>
           {% endfor %}
         </section>
-        <aside class="note"><span>💡</span><p><strong>Про навчальні теми.</strong> Це тематичний огляд програм НУШ. У 6 класі алгебра й геометрія показані окремими блоками математики, а вступні фізика й хімія доповнюють інтегрований природничий курс. У 7 класі ці предмети подано окремо. Порядок тем у школах може відрізнятися; етика — вибіркова. Звіряй матеріал із підручником і вчителем.</p></aside>
+        <aside class="note"><span>💡</span><p><strong>Про навчальні теми.</strong> Це тематичний огляд програм, а не точна копія одного підручника. Порядок і профіль предметів у школах можуть різнитися. У 11 класі добірка з НМТ є тренажером за основними напрямами; актуальний формат конкретного року перевіряй на сайті УЦОЯО.</p></aside>
         """,
         subjects=subjects,
         grade=grade,
@@ -125,7 +131,8 @@ def subject_page(slug):
         subject["name"],
         """
         <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　{{ subject.name }}</nav>
-        <section class="subject-banner"><span class="subject-icon">{{ subject.icon }}</span><div><p class="eyebrow">{{ subject.area }}</p><h1>{{ subject.name }}</h1><p>{{ subject.description }}</p>{% if subject.reference_book %}<p class="reference-book">📚 Орієнтир для 6 класу: {{ subject.reference_book }}</p>{% endif %}</div></section>
+        <section class="subject-banner"><span class="subject-icon">{{ subject.icon }}</span><div><p class="eyebrow">{{ subject.area }}</p><h1>{{ subject.name }}</h1><p>{{ subject.description }}</p>{% if subject.nmt_role %}<span class="nmt-badge">НМТ · {{ subject.nmt_role }}</span>{% endif %}{% if subject.reference_book %}<p class="reference-book">📚 Орієнтир для 6 класу: {{ subject.reference_book }}</p>{% endif %}</div></section>
+        {% if subject.nmt_role %}<p class="nmt-subject-note">У темах є пояснення й контрольні з 12 запитань. Це тренування, а не повний демонстраційний варіант НМТ. Формат і програму свого року звіряй з офіційними матеріалами УЦОЯО.</p>{% endif %}
         <div class="section-head"><div><p class="eyebrow">ТВОЯ НАВЧАЛЬНА МАНДРІВКА · {{ grade }} КЛАС</p><h2>Теми й уроки</h2></div><p data-progress-subject="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}">0 / {{ subject.lessons|length }} тем</p></div>
         <div class="lesson-list">
           {% for lesson in subject.lessons %}
@@ -158,9 +165,10 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
           {% if lesson.steps %}<section class="lesson-panel"><h2>🪜 Розв’язуємо крок за кроком</h2><ul>{% for step in lesson.steps %}<li>{{ step }}</li>{% endfor %}</ul></section>{% endif %}
           {% if lesson.common_mistake %}<section class="lesson-panel warning"><h2>⚠️ Типова помилка</h2><p>{{ lesson.common_mistake }}</p></section>{% endif %}
           {% if lesson.extra_task %}<section class="lesson-panel task"><h2>🚀 Завдання із зірочкою</h2><p>{{ lesson.extra_task }}</p></section>{% endif %}
+          {% if lesson.nmt_tip %}<section class="lesson-panel nmt-tip"><h2>🎯 Підказка для НМТ · {{ lesson.nmt_role }}</h2><p>{{ lesson.nmt_tip }}</p></section>{% endif %}
           {% if lesson.study_guide %}<details class="course-guide"><summary>🧭 Пам’ятка з предмета</summary><ul class="guide-list">{% for point in lesson.study_guide %}<li>{{ point }}</li>{% endfor %}</ul></details>{% endif %}
           <section class="quiz" data-control-passed="{{ 'true' if passed else 'false' }}" data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}">
-            <p class="eyebrow">КОНТРОЛЬНА РОБОТА · {{ lesson.control_work|length }} ЗАПИТАНЬ</p><h2>Перевір, як ти засвоїв тему</h2>
+            <p class="eyebrow">{% if lesson.nmt_prep %}ТРЕНУВАННЯ НМТ · {% else %}КОНТРОЛЬНА РОБОТА · {% endif %}{{ lesson.control_work|length }} ЗАПИТАНЬ</p><h2>Перевір, як ти засвоїв тему</h2>
             {% if submitted %}<div class="quiz-message {{ 'good' if passed else 'try' }}">{% if passed %}Результат: {{ score }} із {{ lesson.control_work|length }}. Тему зараховано 🌟{% else %}Результат: {{ score }} із {{ lesson.control_work|length }}. Для зарахування потрібно {{ passing_score }} правильних відповідей. Перечитай тему й спробуй ще раз.{% endif %}</div>{% endif %}
             <form method="post" action="{{ url_for('quiz', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">
               {% for question in lesson.control_work %}{% set question_index = loop.index0 %}<div class="control-question"><h3>{{ loop.index }}. {{ question.question }}</h3>
@@ -213,7 +221,7 @@ def progress_page():
         <section class="progress-page">
           <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　Мій прогрес</nav>
           <p class="eyebrow">ТВОЇ НАВЧАЛЬНІ ПЕРЕМОГИ</p><h1>Мій прогрес</h1>
-          <p class="intro">Теми зараховуються після щонайменше 4 правильних відповідей із 5 у контрольній роботі. Дані зберігаються в цьому браузері.</p>
+          <p class="intro">Теми зараховуються після щонайменше {{ 9 if grade >= 8 else 4 }} правильних відповідей із {{ 12 if grade >= 8 else 5 }} у контрольній роботі. Дані зберігаються в цьому браузері.</p>
           {% for subject in subjects %}<section class="progress-class"><h2>{{ subject.icon }} {{ subject.name }}</h2><div class="progress-grid"><article class="progress-card"><h3>Опрацьовано тем</h3><div class="progress-track"><span data-progress-bar="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}"></span></div><p data-progress-subject="{{ grade }}:{{ subject.slug }}" data-total="{{ subject.lessons|length }}">0 / {{ subject.lessons|length }} тем</p></article></div></section>{% endfor %}
         </section>
         """,
