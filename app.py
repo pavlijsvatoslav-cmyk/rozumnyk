@@ -151,10 +151,10 @@ SHELL = r"""<!doctype html>
   <a class="skip-link" href="#main-content">До основного вмісту</a>
   <header class="topbar">
     <a class="brand" href="{{ url_for('index') }}"><span class="brand-icon">Р</span><span>Розумник<small>твій простір для відкриттів</small></span></a>
-  <div class="top-actions"><a class="career-link" data-i18n="careers" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="utility-link" data-i18n="tools" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a><a class="progress-link" data-i18n="progress" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><div class="access-tools"><button class="access-button" type="button" data-font="increase" aria-label="Збільшити шрифт">A+</button><button class="access-button" type="button" data-contrast aria-label="Контрастний режим">◐</button><button class="access-button" type="button" data-speak aria-label="Озвучити сторінку">🔊</button><button class="access-button" type="button" data-language>UA/EN</button></div><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
+  <div class="top-actions"><a class="career-link" data-i18n="careers" href="{{ url_for('career_guide', grade=grade) }}">🧭 Професії</a><a class="utility-link" data-i18n="tools" href="{{ url_for('learning_tools', grade=grade) }}">🧰 Мої інструменти</a><a class="utility-link" href="{{ url_for('tp.teacher_home') }}">👩‍🏫 Вчителям</a><a class="progress-link" data-i18n="progress" href="{{ url_for('progress_page', grade=grade) }}">Мій прогрес</a><div class="access-tools"><button class="access-button" type="button" data-font="increase" aria-label="Збільшити шрифт">A+</button><button class="access-button" type="button" data-contrast aria-label="Контрастний режим">◐</button><button class="access-button" type="button" data-speak aria-label="Озвучити сторінку">🔊</button><button class="access-button" type="button" data-language>UA/EN</button></div><nav class="grade-switch" aria-label="Обрати клас">{% for class_number in range(5, 12) %}<a class="{{ 'active' if grade == class_number else '' }}" href="{{ url_for('index', grade=class_number) }}">{{ class_number }}</a>{% endfor %}</nav></div>
   </header>
   <main id="main-content" tabindex="-1">{{ content|safe }}</main>
-  <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня · <a href="{{ url_for('privacy_page') }}">Приватність і дані</a></footer>
+  <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня · <a href="{{ url_for('privacy_page') }}">Приватність і дані</a> · <a href="{{ url_for('tp.join') }}">Вхід до класу</a></footer>
   <script>
     const studentCanvas=document.querySelector('#student-scene');
     if(studentCanvas){
@@ -454,12 +454,12 @@ def privacy_page():
           <nav class="crumb"><a href="{{ url_for('index', grade=5) }}">Головна</a>　/　Приватність і дані</nav>
           <h1>Твої дані — під твоїм контролем</h1>
           <p class="intro">Коротко пояснюємо, що зберігає «Розумник», де це зберігається і як видалити ці дані.</p>
-          <div class="privacy-callout"><p><strong>Обліковий запис не потрібен.</strong> Прогрес і особисті матеріали зберігаються у сховищі браузера на цьому пристрої. Вони автоматично не синхронізуються з іншими пристроями.</p></div>
+          <div class="privacy-callout"><p><strong>Обліковий запис не потрібен.</strong> Прогрес і особисті матеріали зберігаються у сховищі браузера на цьому пристрої. Вони автоматично не синхронізуються з іншими пристроями. Виняток — класи: якщо вчитель створив клас, а ти приєднався за кодом, результати контрольних зберігаються на сервері й доступні вчителю. Докладніше — у розділі <a href=\"/classes-privacy\">«Приватність у класах»</a>.</p></div>
           <h2>Що сайт зберігає в браузері</h2>
           <ul><li>завершені теми, останній відкритий урок і дні навчальної активності;</li><li>твої нотатки, закладки, план навчання та питання для повторення;</li><li>налаштування розміру шрифту, контрасту й мови меню.</li></ul>
           <p>Ці записи зберігаються через локальне сховище браузера. Вони залишаються на цьому пристрої, доки ти їх не видалиш або не очистиш дані сайту в налаштуваннях браузера. Не записуй у нотатки паролі, адресу, телефон чи іншу чутливу інформацію.</p>
           <h2>Як працюють контрольні</h2>
-          <p>Коли ти надсилаєш контрольну, обрані відповіді передаються серверній частині сайту, щоб підрахувати результат і показати розбір. Застосунок не створює обліковий запис і не записує оцінку до профілю чи бази даних. Черга помилок для повторення зберігається локально у браузері.</p>
+          <p>Коли ти надсилаєш контрольну, обрані відповіді передаються серверній частині сайту, щоб підрахувати результат і показати розбір. Поза класами застосунок не створює обліковий запис і не записує оцінку до профілю чи бази даних; у класі результат бачить вчитель. Черга помилок для повторення зберігається локально у браузері.</p>
           <h2>Зовнішня бібліотека для 3D-сцени</h2>
           <p>На головній сторінці браузер завантажує бібліотеку Three.js із jsDelivr для показу 3D-ілюстрації. Якщо бібліотека недоступна, сайт показує запасне зображення учня.</p>
           <h2>Видалити дані з цього браузера</h2>
@@ -844,6 +844,12 @@ def not_found(_error):
         robots_noindex=True,
         canonical_url="",
     ), 404
+
+from teacher_platform import init_platform
+
+init_platform(app, show_page, GRADES, get_subject, get_lesson)
+  from teacher_platform import init_platform
+  init_platform(app, show_page, GRADES, get_subject, get_lesson)
 
 
 if __name__ == "__main__":
