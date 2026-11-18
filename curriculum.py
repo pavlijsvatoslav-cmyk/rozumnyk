@@ -1046,6 +1046,11 @@ for _grade, _target, _source_topics in ((10, GRADE10_SUBJECTS, _DEFENSE_TOPICS),
 GRADES[10] = GRADE10_SUBJECTS
 GRADES[11] = GRADE11_SUBJECTS
 
+from grade9_books import apply_grade9_books
+apply_grade9_books(GRADES, rich_lesson)
+from grade9_more import apply_grade9_more
+apply_grade9_more(GRADES, rich_lesson)
+
 add_control_works()
 
 assert _grade1011_generated[10] >= 2000 and _grade1011_generated[11] >= 2000

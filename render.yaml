@@ -1,0 +1,25 @@
+# Render Blueprint. Безкоштовний план: сайт «засинає» після 15 хв без запитів,
+# а файли (база класів, завантаження) НЕ зберігаються між розгортаннями.
+# Для реальних класів перейдіть на платний план і розкоментуйте блок disk (див. DEPLOY.md).
+services:
+  - type: web
+    name: rozumnyk
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --workers 1 --threads 4 --timeout 60
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TEACHER_INVITE_CODE
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: DEMO_PASSWORD
+        sync: false
+    # Для платного плану (plan: starter) замість free:
+    # disk:
+    #   name: rozumnyk-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+    # і додайте змінну DATA_DIR зі значенням /var/data

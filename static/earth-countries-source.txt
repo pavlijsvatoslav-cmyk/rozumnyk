@@ -1,0 +1,4 @@
+Earth globe outlines use Natural Earth 1:50m Admin 0 – Countries data (version 5.1.1).
+Natural Earth vector data is public domain.
+Dataset reference: https://www.naturalearthdata.com/downloads/50m-cultural-vectors/
+GeoJSON mirror: https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_0_countries.geojson

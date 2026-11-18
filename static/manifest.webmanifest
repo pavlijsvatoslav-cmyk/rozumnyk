@@ -1,0 +1,14 @@
+{
+  "name": "Розумник — навчання у своєму темпі",
+  "short_name": "Розумник",
+  "description": "Пояснення, практика й навчальні теми для учнів 5–11 класів.",
+  "lang": "uk",
+  "start_url": "/?grade=5",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08101c",
+  "theme_color": "#08101c",
+  "icons": [
+    { "src": "/static/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
