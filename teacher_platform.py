@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS students(id INTEGER PRIMARY KEY, class_id INTEGER NOT
 CREATE TABLE IF NOT EXISTS materials(id INTEGER PRIMARY KEY, teacher_id INTEGER NOT NULL REFERENCES teachers(id) ON DELETE CASCADE, title TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', kind TEXT NOT NULL, url TEXT, stored TEXT, orig TEXT, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS assignments(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, kind TEXT NOT NULL, title TEXT NOT NULL, grade INTEGER, subject_slug TEXT, lesson_id INTEGER, material_id INTEGER REFERENCES materials(id) ON DELETE SET NULL, description TEXT NOT NULL DEFAULT '', due TEXT, created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS results(id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, grade INTEGER NOT NULL, subject_slug TEXT NOT NULL, lesson_id INTEGER NOT NULL, score INTEGER NOT NULL, total INTEGER NOT NULL, created TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS submissions(id INTEGER PRIMARY KEY, assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, url TEXT, stored TEXT, orig TEXT, note TEXT NOT NULL DEFAULT '', created TEXT NOT NULL, answer TEXT NOT NULL DEFAULT '', teacher_feedback TEXT NOT NULL DEFAULT '', reviewed TEXT, UNIQUE(assignment_id, student_id));
+CREATE TABLE IF NOT EXISTS submissions(id INTEGER PRIMARY KEY, assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, url TEXT, stored TEXT, orig TEXT, note TEXT NOT NULL DEFAULT '', created TEXT NOT NULL, answer TEXT NOT NULL DEFAULT '', teacher_feedback TEXT NOT NULL DEFAULT '', reviewed TEXT, showcase_requested INTEGER NOT NULL DEFAULT 0, showcase_approved INTEGER NOT NULL DEFAULT 0, showcase_name TEXT NOT NULL DEFAULT '', UNIQUE(assignment_id, student_id));
 CREATE TABLE IF NOT EXISTS lesson_issue_reports(id INTEGER PRIMARY KEY, grade INTEGER NOT NULL, subject_slug TEXT NOT NULL, lesson_id INTEGER NOT NULL, category TEXT NOT NULL, message TEXT NOT NULL, created TEXT NOT NULL, reviewed TEXT);
 CREATE TABLE IF NOT EXISTS grade_entries(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, subject TEXT NOT NULL, title TEXT NOT NULL, score REAL NOT NULL, max_score REAL NOT NULL, note TEXT NOT NULL DEFAULT '', created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attendance(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, day TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('present','absent','late','excused')), updated TEXT NOT NULL, UNIQUE(class_id,student_id,day));
@@ -486,7 +486,7 @@ CLASS_T = FLASH + """
 
   <h2>Завдання класу</h2>
   {% if assignments %}<table><tbody>{% for a in assignments %}<tr><td><span class="pill">{{ {'lesson':'тема','material':'матеріал','project':'проєкт','homework':'домашнє завдання'}[a.kind] }}</span> {{ a.title }}{% if a.due %} <span class="muted">· до {{ a.due }}</span>{% endif %}
-    {% if a.kind == 'project' %}<br><span class="muted">Здано: {{ subs.get(a.id, 0) }}</span> {% for sb in sublist.get(a.id, []) %}<br>· <span data-no-translate>{{ sb.nick }}</span>: {% if sb.url %}<a href="{{ sb.url }}" target="_blank" rel="noopener noreferrer nofollow">посилання</a>{% endif %}{% if sb.stored %} <a href="{{ url_for('tp.submission_file', sub_id=sb.id) }}">файл ({{ sb.orig }})</a>{% endif %}{% if sb.note %} — <span data-no-translate>{{ sb.note }}</span>{% endif %}{% endfor %}{% elif a.kind == 'homework' %}<div class="status-strip"><span class="pill">Надіслали: {{ homework_stats[a.id].submitted }}</span><span class="pill">Очікує перевірки: {{ homework_stats[a.id].pending }}</span><span class="pill">Є відгук: {{ homework_stats[a.id].reviewed }}</span><span class="pill">Ще не здали: {{ homework_stats[a.id].missing }}</span></div>{% for sb in sublist.get(a.id, []) %}<div class="submission-review"><strong>{{ sb.nick }}</strong> <span class="pill">{{ 'Відгук надіслано' if sb.teacher_feedback else ('Переглянуто без коментаря' if sb.reviewed else 'Очікує перевірки') }}</span>{% if sb.answer %}<p>{{ sb.answer }}</p>{% else %}<p class="muted">Учень позначив виконання без текстової відповіді.</p>{% endif %}{% if sb.stored %}<p><a href="{{ url_for('tp.submission_file', sub_id=sb.id) }}">Відкрити роботу: {{ sb.orig }}</a></p>{% endif %}<form class="stack" method="post" action="{{ url_for('tp.review_homework', class_id=klass.id, aid=a.id, sid=sb.student_id) }}">""" + CSRF + """
+    {% if a.kind == 'project' %}<br><span class="muted">Здано: {{ subs.get(a.id, 0) }}</span> {% for sb in sublist.get(a.id, []) %}<br>· <span data-no-translate>{{ sb.nick }}</span>: {% if sb.url %}<a href="{{ sb.url }}" target="_blank" rel="noopener noreferrer nofollow">посилання</a>{% endif %}{% if sb.stored %} <a href="{{ url_for('tp.submission_file', sub_id=sb.id) }}">файл ({{ sb.orig }})</a>{% endif %}{% if sb.note %} — <span data-no-translate>{{ sb.note }}</span>{% endif %}{% if sb.showcase_requested %}<span class="pill">{{ 'У галереї' if sb.showcase_approved else 'Просить показати класу' }}</span><form method="post" action="{{ url_for('tp.review_showcase', class_id=klass.id, sub_id=sb.id) }}" style="display:inline"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="approve" value="{{ '0' if sb.showcase_approved else '1' }}"><button class="tp-btn ghost small" type="submit">{{ 'Прибрати з галереї' if sb.showcase_approved else 'Схвалити показ' }}</button></form>{% endif %}{% endfor %}{% elif a.kind == 'homework' %}<div class="status-strip"><span class="pill">Надіслали: {{ homework_stats[a.id].submitted }}</span><span class="pill">Очікує перевірки: {{ homework_stats[a.id].pending }}</span><span class="pill">Є відгук: {{ homework_stats[a.id].reviewed }}</span><span class="pill">Ще не здали: {{ homework_stats[a.id].missing }}</span></div>{% for sb in sublist.get(a.id, []) %}<div class="submission-review"><strong>{{ sb.nick }}</strong> <span class="pill">{{ 'Відгук надіслано' if sb.teacher_feedback else ('Переглянуто без коментаря' if sb.reviewed else 'Очікує перевірки') }}</span>{% if sb.answer %}<p>{{ sb.answer }}</p>{% else %}<p class="muted">Учень позначив виконання без текстової відповіді.</p>{% endif %}{% if sb.stored %}<p><a href="{{ url_for('tp.submission_file', sub_id=sb.id) }}">Відкрити роботу: {{ sb.orig }}</a></p>{% endif %}<form class="stack" method="post" action="{{ url_for('tp.review_homework', class_id=klass.id, aid=a.id, sid=sb.student_id) }}">""" + CSRF + """
         <label>Відгук для учня<textarea name="feedback" maxlength="1000" placeholder="Що вдалося і що варто допрацювати?">{{ sb.teacher_feedback }}</textarea></label><button class="tp-btn ghost small" type="submit">{{ 'Оновити відгук' if sb.reviewed else 'Надіслати відгук' }}</button></form></div>{% endfor %}{% endif %}</td>
     <td style="width:90px"><form method="post" action="{{ url_for('tp.assignment_delete', class_id=klass.id, aid=a.id) }}" onsubmit="return confirm('Видалити завдання?')">""" + CSRF + """<button class="tp-btn danger small">Видалити</button></form></td></tr>{% endfor %}</tbody></table>
   {% else %}<p class="muted">Завдань ще немає.</p>{% endif %}
@@ -928,12 +928,14 @@ def material_file(mid):
 
 @bp.route("/f/s/<int:sub_id>")
 def submission_file(sub_id):
-    row = db().execute("SELECT sb.*, c.teacher_id FROM submissions sb JOIN students s ON s.id=sb.student_id "
-                       "JOIN classes c ON c.id=s.class_id WHERE sb.id=?", (sub_id,)).fetchone()
+    row = db().execute("SELECT sb.*, c.teacher_id, s.class_id, a.kind FROM submissions sb JOIN students s ON s.id=sb.student_id "
+                       "JOIN classes c ON c.id=s.class_id JOIN assignments a ON a.id=sb.assignment_id WHERE sb.id=?", (sub_id,)).fetchone()
     if not row or not row["stored"]:
         abort(404)
     teacher, student = current_teacher(), current_student()
-    if (teacher and teacher["id"] == row["teacher_id"]) or (student and student["id"] == row["student_id"]):
+    same_class_gallery = bool(student and student["class_id"] == row["class_id"] and row["kind"] == "project"
+                              and row["showcase_requested"] and row["showcase_approved"])
+    if (teacher and teacher["id"] == row["teacher_id"]) or (student and student["id"] == row["student_id"]) or same_class_gallery:
         return serve_file(row["stored"], row["orig"])
     abort(404)
 
@@ -1019,6 +1021,9 @@ MY_T = FLASH + """
           <label>Посилання на роботу<input type="url" name="url" placeholder="https://…"></label>
           <label>…або файл (PDF, PPTX, DOCX, PNG, JPG — до 15 МБ)<input type="file" name="file" accept=".pdf,.pptx,.docx,.xlsx,.png,.jpg,.jpeg"></label>
           <label>Коментар для вчителя<input name="note" maxlength="200"></label>
+          <label><span><input type="checkbox" name="showcase" value="1"> Попросити додати роботу до галереї класу</span></label>
+          <p class="hint">Галерею побачать лише учні цього класу й учитель. Не додавай прізвище, обличчя, адресу чи контакти; учитель має схвалити показ.</p>
+          <label>Псевдонім у галереї (необов’язково)<input name="showcase_name" maxlength="30" placeholder="Наприклад, Автор роботи"></label>
           <button class="tp-btn small" type="submit">Надіслати вчителю</button></form></details>
     {% endif %}</div>{% endfor %}</div>
   <section id="personal-notes" class="tp-card" style="margin-top:24px">
@@ -1035,6 +1040,13 @@ MY_T = FLASH + """
         <p class="hint">Оновлено: {{ note.updated }}</p><button class="tp-btn small" type="submit">Зберегти зміни</button></form>
       <form method="post" action="{{ url_for('tp.student_note_delete', note_id=note.id) }}" style="margin-top:8px">""" + CSRF + """<button class="tp-btn danger small" type="submit">Видалити</button></form>
     </article>{% endfor %}</div>{% else %}<p class="muted">Тут з’являться твої особисті нотатки.</p>{% endif %}
+  </section>
+  <section class="tp-card" style="margin-top:24px"><h2 style="margin-top:0">🖼️ Галерея проєктів класу</h2>
+    <p>Тут лише роботи, для яких автор попросив показ і які схвалив учитель. Галерею бачать учасники цього класу після входу.</p>
+    {% if gallery %}<div class="tp-grid">{% for item in gallery %}<article class="tp-card"><p class="eyebrow">{{ item.display_name }} · {{ item.created }}</p><h3>{{ item.title }}</h3>
+      {% if item.url %}<p><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer nofollow">Відкрити роботу ↗</a></p>{% endif %}
+      {% if item.stored %}<p><a href="{{ url_for('tp.submission_file', sub_id=item.id) }}">Відкрити файл: {{ item.orig }}</a></p>{% endif %}
+    </article>{% endfor %}</div>{% else %}<p class="muted">Схвалених робіт поки немає. Твій учитель може додати першу.</p>{% endif %}
   </section>
   <h2>Мої оцінки</h2>{% if own_grades %}<div class="scroll"><table><thead><tr><th>Предмет і робота</th><th>Бали</th><th>Коментар</th></tr></thead><tbody>{% for g in own_grades %}<tr><td>{{ g.subject }} · {{ g.title }}</td><td><strong>{{ g.score }}/{{ g.max_score }}</strong></td><td>{{ g.note or '—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">Оцінок поки немає.</p>{% endif %}
   <h2>Моя відвідуваність</h2>{% if own_attendance %}<div class="scroll"><table><thead><tr><th>Дата</th><th>Статус</th></tr></thead><tbody>{% for a in own_attendance %}<tr><td>{{ a.day }}</td><td>{{ {'present':'Присутній','absent':'Відсутній','late':'Запізнився','excused':'Поважна причина'}[a.status] }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">Записів поки немає.</p>{% endif %}
@@ -1068,11 +1080,19 @@ def my_class():
             done = a["id"] in subs
         items.append({"a": a, "status": status, "sub": subs.get(a["id"]),
                       "late": bool(a["due"] and a["due"] < today and not done and a["kind"] != "material")})
+    gallery = d.execute(
+        "SELECT sb.id,sb.url,sb.stored,sb.orig,sb.created,a.title,"
+        "COALESCE(NULLIF(sb.showcase_name,''),'Учасник класу') AS display_name "
+        "FROM submissions sb JOIN assignments a ON a.id=sb.assignment_id JOIN students s ON s.id=sb.student_id "
+        "WHERE s.class_id=? AND a.class_id=? AND a.kind='project' "
+        "AND sb.showcase_requested=1 AND sb.showcase_approved=1 ORDER BY sb.id DESC LIMIT 30",
+        (st["class_id"], st["class_id"]),
+    ).fetchall()
     own_grades = d.execute("SELECT subject,title,score,max_score,note,created FROM grade_entries WHERE class_id=? AND student_id=? ORDER BY id DESC LIMIT 50", (st["class_id"], st["id"])).fetchall()
     own_attendance = d.execute("SELECT day,status FROM attendance WHERE class_id=? AND student_id=? ORDER BY day DESC LIMIT 30", (st["class_id"], st["id"])).fetchall()
     notes = d.execute("SELECT id,title,body,updated FROM student_notes WHERE student_id=? ORDER BY updated DESC,id DESC LIMIT ?",
                       (st["id"], MAX_PERSONAL_NOTES)).fetchall()
-    return page("Мій клас", MY_T, st=st, items=items, own_grades=own_grades, own_attendance=own_attendance, notes=notes)
+    return page("Мій клас", MY_T, st=st, items=items, own_grades=own_grades, own_attendance=own_attendance, notes=notes, gallery=gallery)
 
 
 def _current_student_or_redirect():
@@ -1259,12 +1279,32 @@ def submit_project(aid):
     old = db().execute("SELECT stored FROM submissions WHERE assignment_id=? AND student_id=?", (aid, st["id"])).fetchone()
     if old:
         remove_file(old["stored"])
-    db().execute("INSERT INTO submissions(assignment_id,student_id,url,stored,orig,note,created) VALUES(?,?,?,?,?,?,?) "
-                 "ON CONFLICT(assignment_id,student_id) DO UPDATE SET url=excluded.url, stored=excluded.stored, orig=excluded.orig, note=excluded.note, created=excluded.created",
-                 (aid, st["id"], url, stored, orig, clean(request.form.get("note"), 200), now()))
+    requested = 1 if request.form.get("showcase") == "1" else 0
+    showcase_name = clean(request.form.get("showcase_name"), 30) if requested else ""
+    db().execute("INSERT INTO submissions(assignment_id,student_id,url,stored,orig,note,created,showcase_requested,showcase_approved,showcase_name) VALUES(?,?,?,?,?,?,?,?,0,?) "
+                 "ON CONFLICT(assignment_id,student_id) DO UPDATE SET url=excluded.url, stored=excluded.stored, orig=excluded.orig, note=excluded.note, created=excluded.created, showcase_requested=excluded.showcase_requested, showcase_approved=0, showcase_name=excluded.showcase_name",
+                 (aid, st["id"], url, stored, orig, clean(request.form.get("note"), 200), now(), requested, showcase_name))
     db().commit()
     flash("Роботу надіслано вчителю.")
     return redirect(url_for("tp.my_class"))
+
+
+@bp.post("/teacher/class/<int:class_id>/submission/<int:sub_id>/showcase")
+def review_showcase(class_id, sub_id):
+    _, klass = owned_class(class_id)
+    row = db().execute(
+        "SELECT sb.id,sb.showcase_requested FROM submissions sb "
+        "JOIN assignments a ON a.id=sb.assignment_id JOIN students s ON s.id=sb.student_id "
+        "WHERE sb.id=? AND a.class_id=? AND a.kind='project' AND s.class_id=?",
+        (sub_id, klass["id"], klass["id"]),
+    ).fetchone()
+    if not row:
+        abort(404)
+    approve = request.form.get("approve") == "1" and bool(row["showcase_requested"])
+    db().execute("UPDATE submissions SET showcase_approved=? WHERE id=?", (1 if approve else 0, sub_id))
+    db().commit()
+    flash("Роботу додано до галереї класу." if approve else "Показ роботи в галереї вимкнено.")
+    return redirect(url_for("tp.class_page", class_id=class_id))
 
 
 @bp.post("/my-class/leave")
@@ -1371,7 +1411,10 @@ def init_platform(app, show_page, grades, get_subject, get_lesson):
         submission_columns = {row[1] for row in conn.execute("PRAGMA table_info(submissions)")}
         for column, declaration in (("answer", "TEXT NOT NULL DEFAULT ''"),
                                     ("teacher_feedback", "TEXT NOT NULL DEFAULT ''"),
-                                    ("reviewed", "TEXT")):
+                                    ("reviewed", "TEXT"),
+                                    ("showcase_requested", "INTEGER NOT NULL DEFAULT 0"),
+                                    ("showcase_approved", "INTEGER NOT NULL DEFAULT 0"),
+                                    ("showcase_name", "TEXT NOT NULL DEFAULT '")):
             if column not in submission_columns:
                 conn.execute(f"ALTER TABLE submissions ADD COLUMN {column} {declaration}")
         conn.commit()
