@@ -10,6 +10,7 @@
   TEACHER_INVITE_CODE якщо задано — реєстрація вчителя можлива лише з цим кодом
 """
 import csv
+import hashlib
 import io
 import math
 import os
@@ -35,6 +36,10 @@ ALLOWED_EXT = {
 }
 INLINE_EXT = {"pdf", "png", "jpg", "jpeg"}
 MAX_UPLOAD = 15 * 1024 * 1024
+MAX_PERSONAL_NOTES = 100
+MAX_NOTE_TITLE = 120
+MAX_NOTE_BODY = 5000
+PASSWORD_HASH_METHOD = "scrypt:32768:8:3"
 CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
 SCHEMA = """
@@ -49,9 +54,11 @@ CREATE TABLE IF NOT EXISTS lesson_issue_reports(id INTEGER PRIMARY KEY, grade IN
 CREATE TABLE IF NOT EXISTS grade_entries(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, subject TEXT NOT NULL, title TEXT NOT NULL, score REAL NOT NULL, max_score REAL NOT NULL, note TEXT NOT NULL DEFAULT '', created TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS attendance(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, day TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('present','absent','late','excused')), updated TEXT NOT NULL, UNIQUE(class_id,student_id,day));
 CREATE TABLE IF NOT EXISTS class_events(id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id) ON DELETE CASCADE, title TEXT NOT NULL, details TEXT NOT NULL DEFAULT '', event_date TEXT NOT NULL, created TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS student_notes(id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE, title TEXT NOT NULL, body TEXT NOT NULL, created TEXT NOT NULL, updated TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_results_student ON results(student_id);
 CREATE INDEX IF NOT EXISTS idx_grade_entries_class ON grade_entries(class_id, student_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_class_day ON attendance(class_id, day);
+CREATE INDEX IF NOT EXISTS idx_student_notes_student ON student_notes(student_id, updated DESC);
 """
 
 CTX = {}  # grades, show_page, get_subject, get_lesson — заповнюється в init_platform
@@ -77,6 +84,10 @@ def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
 
 
+def hash_secret(value):
+    return generate_password_hash(value, method=PASSWORD_HASH_METHOD)
+
+
 def csrf_token():
     if "_csrf" not in session:
         session["_csrf"] = secrets.token_urlsafe(24)
@@ -90,10 +101,20 @@ def page(title, template, **values):
 
 
 _attempts = {}
+_last_attempt_cleanup = 0
 
 
 def throttled(key, limit=8, window=600):
+    global _last_attempt_cleanup
     stamp = time.time()
+    if stamp - _last_attempt_cleanup > 60:
+        for old_key, old_hits in list(_attempts.items()):
+            recent = [t for t in old_hits if stamp - t < 3600]
+            if recent:
+                _attempts[old_key] = recent
+            else:
+                _attempts.pop(old_key, None)
+        _last_attempt_cleanup = stamp
     hits = [t for t in _attempts.get(key, []) if stamp - t < window]
     _attempts[key] = hits
     if len(hits) >= limit:
@@ -287,14 +308,14 @@ HOME_T = FLASH + """
   <div class="tp-grid">
     <div class="tp-card"><h2 style="margin-top:0">Увійти</h2>
       <form class="stack" method="post" action="{{ url_for('tp.teacher_login') }}">""" + CSRF + """
-        <label>Електронна пошта<input type="email" name="email" required autocomplete="username"></label>
-        <label>Пароль<input type="password" name="password" required autocomplete="current-password"></label>
+        <label>Електронна пошта<input type="email" name="email" required maxlength="120" autocomplete="username"></label>
+        <label>Пароль<input type="password" name="password" required maxlength="128" autocomplete="current-password"></label>
         <button class="tp-btn" type="submit">Увійти</button></form></div>
     <div class="tp-card"><h2 style="margin-top:0">Зареєструватися</h2>
       <form class="stack" method="post" action="{{ url_for('tp.teacher_register') }}">""" + CSRF + """
         <label>Ім’я та по батькові<input name="name" required maxlength="80" autocomplete="name"></label>
-        <label>Електронна пошта<input type="email" name="email" required autocomplete="username"></label>
-        <label>Пароль<input type="password" name="password" required minlength="8" autocomplete="new-password"><span class="hint">Щонайменше 8 символів</span></label>
+        <label>Електронна пошта<input type="email" name="email" required maxlength="120" autocomplete="username"></label>
+        <label>Пароль<input type="password" name="password" required minlength="15" maxlength="128" autocomplete="new-password"><span class="hint">Щонайменше 15 символів. Зручний варіант — кілька слів у фразі.</span></label>
         {% if invite %}<label>Код запрошення<input name="invite" required><span class="hint">Отримайте його в автора проєкту</span></label>{% endif %}
         <button class="tp-btn" type="submit">Створити кабінет</button></form></div>
   </div>
@@ -320,14 +341,14 @@ def teacher_register():
     name = clean(request.form.get("name"), 80)
     email = clean(request.form.get("email"), 120).lower()
     password = request.form.get("password", "")
-    if not name or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) or len(password) < 8:
-        flash("Перевірте ім’я, пошту й пароль (мінімум 8 символів).")
+    if not name or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) or not 15 <= len(password) <= 128:
+        flash("Перевірте ім’я, пошту й пароль (від 15 до 128 символів).")
         return redirect(url_for("tp.teacher_home"))
     if db().execute("SELECT 1 FROM teachers WHERE email=?", (email,)).fetchone():
         flash("Не вдалося створити кабінет. Перевірте дані або спробуйте увійти, якщо вже маєте акаунт.")
         return redirect(url_for("tp.teacher_home"))
     cur = db().execute("INSERT INTO teachers(email,name,pw,created) VALUES(?,?,?,?)",
-                       (email, name, generate_password_hash(password), now()))
+                       (email, name, hash_secret(password), now()))
     db().commit()
     session.clear()
     session["teacher_id"] = cur.lastrowid
@@ -338,7 +359,8 @@ def teacher_register():
 @bp.post("/teacher/login")
 def teacher_login():
     email = clean(request.form.get("email"), 120).lower()
-    if throttled(f"login:{request.remote_addr}:{email}", limit=8):
+    email_key = hashlib.sha256(email.encode("utf-8")).hexdigest()[:20]
+    if throttled(f"login-ip:{request.remote_addr}", limit=30) or throttled(f"login-email:{email_key}", limit=8) or len(request.form.get("password", "")) > 128:
         abort(400, "Забагато спроб входу. Спробуйте за кілька хвилин.")
     row = db().execute("SELECT * FROM teachers WHERE email=?", (email,)).fetchone()
     if not row or not check_password_hash(row["pw"], request.form.get("password", "")):
@@ -763,8 +785,8 @@ def student_pin(class_id, sid):
     st = db().execute("SELECT * FROM students WHERE id=? AND class_id=?", (sid, klass["id"])).fetchone()
     if not st:
         abort(404)
-    pin = f"{secrets.randbelow(10000):04d}"
-    db().execute("UPDATE students SET pin=? WHERE id=?", (generate_password_hash(pin), sid))
+    pin = f"{secrets.randbelow(1_000_000):06d}"
+    db().execute("UPDATE students SET pin=? WHERE id=?", (hash_secret(pin), sid))
     db().commit()
     flash(f"Новий PIN для «{st['nick']}»: {pin}. Передайте його учневі — повторно його не буде показано.")
     return redirect(url_for("tp.class_page", class_id=class_id))
@@ -923,7 +945,7 @@ JOIN_T = FLASH + """
   <form class="stack" method="post" action="{{ url_for('tp.join') }}">""" + CSRF + """
     <label>Код класу<input name="code" required maxlength="6" autocomplete="off" style="text-transform:uppercase;letter-spacing:.2em" value="{{ code or '' }}"></label>
     <label>Ім’я або псевдонім<input name="nick" required maxlength="30" autocomplete="off"><span class="hint">Домовся з учителем, як підписуватися. Прізвище й контакти вказувати не треба.</span></label>
-    <label>PIN (лише якщо вже заходив раніше)<input name="pin" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+    <label>PIN (лише якщо вже заходив раніше)<input name="pin" inputmode="numeric" maxlength="6" autocomplete="off"></label>
     <button class="tp-btn" type="submit">Далі</button></form>
   <p class="muted" style="margin-top:14px;font-size:14.82px"><a href="{{ url_for('tp.platform_privacy') }}">Приватність у класах</a></p></section>"""
 
@@ -961,9 +983,9 @@ def join():
     if count >= 60:
         flash("У цьому класі вже максимальна кількість учнів.")
         return redirect(url_for("tp.join"))
-    new_pin = f"{secrets.randbelow(10000):04d}"
+    new_pin = f"{secrets.randbelow(1_000_000):06d}"
     cur = db().execute("INSERT INTO students(class_id,nick,pin,created) VALUES(?,?,?,?)",
-                       (klass["id"], nick, generate_password_hash(new_pin), now()))
+                       (klass["id"], nick, hash_secret(new_pin), now()))
     db().commit()
     session.clear()
     session["student_id"] = cur.lastrowid
@@ -999,6 +1021,21 @@ MY_T = FLASH + """
           <label>Коментар для вчителя<input name="note" maxlength="200"></label>
           <button class="tp-btn small" type="submit">Надіслати вчителю</button></form></details>
     {% endif %}</div>{% endfor %}</div>
+  <section id="personal-notes" class="tp-card" style="margin-top:24px">
+    <h2 style="margin-top:0">📝 Мій нотатник</h2>
+    <p>Нотатки прив’язані до твого кабінету: учитель та інші учні не бачать їх у класі. Не записуй тут паролі, адресу чи особисті контакти.</p>
+    <form class="stack" method="post" action="{{ url_for('tp.student_note_create') }}">""" + CSRF + """
+      <label>Назва<input name="title" required maxlength="120" placeholder="Наприклад, Формули руху"></label>
+      <label>Текст нотатки<textarea name="body" required maxlength="5000" rows="4" placeholder="Запиши головну думку, формулу чи запитання…"></textarea></label>
+      <button class="tp-btn small" type="submit">Зберегти нотатку</button></form>
+    {% if notes %}<div class="tp-grid" style="margin-top:16px">{% for note in notes %}<article class="tp-card">
+      <form class="stack" method="post" action="{{ url_for('tp.student_note_update', note_id=note.id) }}">""" + CSRF + """
+        <label>Назва<input name="title" required maxlength="120" value="{{ note.title }}"></label>
+        <label>Текст<textarea name="body" required maxlength="5000" rows="5">{{ note.body }}</textarea></label>
+        <p class="hint">Оновлено: {{ note.updated }}</p><button class="tp-btn small" type="submit">Зберегти зміни</button></form>
+      <form method="post" action="{{ url_for('tp.student_note_delete', note_id=note.id) }}" style="margin-top:8px">""" + CSRF + """<button class="tp-btn danger small" type="submit">Видалити</button></form>
+    </article>{% endfor %}</div>{% else %}<p class="muted">Тут з’являться твої особисті нотатки.</p>{% endif %}
+  </section>
   <h2>Мої оцінки</h2>{% if own_grades %}<div class="scroll"><table><thead><tr><th>Предмет і робота</th><th>Бали</th><th>Коментар</th></tr></thead><tbody>{% for g in own_grades %}<tr><td>{{ g.subject }} · {{ g.title }}</td><td><strong>{{ g.score }}/{{ g.max_score }}</strong></td><td>{{ g.note or '—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">Оцінок поки немає.</p>{% endif %}
   <h2>Моя відвідуваність</h2>{% if own_attendance %}<div class="scroll"><table><thead><tr><th>Дата</th><th>Статус</th></tr></thead><tbody>{% for a in own_attendance %}<tr><td>{{ a.day }}</td><td>{{ {'present':'Присутній','absent':'Відсутній','late':'Запізнився','excused':'Поважна причина'}[a.status] }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">Записів поки немає.</p>{% endif %}
   <form method="post" action="{{ url_for('tp.leave') }}" style="margin-top:24px">""" + CSRF + """<button class="tp-btn ghost small">Вийти з класу</button></form>
@@ -1033,7 +1070,71 @@ def my_class():
                       "late": bool(a["due"] and a["due"] < today and not done and a["kind"] != "material")})
     own_grades = d.execute("SELECT subject,title,score,max_score,note,created FROM grade_entries WHERE class_id=? AND student_id=? ORDER BY id DESC LIMIT 50", (st["class_id"], st["id"])).fetchall()
     own_attendance = d.execute("SELECT day,status FROM attendance WHERE class_id=? AND student_id=? ORDER BY day DESC LIMIT 30", (st["class_id"], st["id"])).fetchall()
-    return page("Мій клас", MY_T, st=st, items=items, own_grades=own_grades, own_attendance=own_attendance)
+    notes = d.execute("SELECT id,title,body,updated FROM student_notes WHERE student_id=? ORDER BY updated DESC,id DESC LIMIT ?",
+                      (st["id"], MAX_PERSONAL_NOTES)).fetchall()
+    return page("Мій клас", MY_T, st=st, items=items, own_grades=own_grades, own_attendance=own_attendance, notes=notes)
+
+
+def _current_student_or_redirect():
+    student = current_student()
+    if not student:
+        return None
+    return student
+
+
+@bp.post("/my-class/notes")
+def student_note_create():
+    student = _current_student_or_redirect()
+    if not student:
+        return redirect(url_for("tp.join"))
+    title = clean(request.form.get("title"), MAX_NOTE_TITLE)
+    body = clean_lines(request.form.get("body"), MAX_NOTE_BODY)
+    if not title or not body:
+        flash("Додай назву й текст нотатки.")
+        return redirect(url_for("tp.my_class") + "#personal-notes")
+    count = db().execute("SELECT COUNT(*) FROM student_notes WHERE student_id=?", (student["id"],)).fetchone()[0]
+    if count >= MAX_PERSONAL_NOTES:
+        flash("У нотатнику вже 100 записів. Видали непотрібну нотатку й спробуй ще раз.")
+        return redirect(url_for("tp.my_class") + "#personal-notes")
+    stamp = now()
+    db().execute("INSERT INTO student_notes(student_id,title,body,created,updated) VALUES(?,?,?,?,?)",
+                 (student["id"], title, body, stamp, stamp))
+    db().commit()
+    flash("Нотатку збережено у твоєму кабінеті.")
+    return redirect(url_for("tp.my_class") + "#personal-notes")
+
+
+@bp.post("/my-class/notes/<int:note_id>/save")
+def student_note_update(note_id):
+    student = _current_student_or_redirect()
+    if not student:
+        return redirect(url_for("tp.join"))
+    note = db().execute("SELECT id FROM student_notes WHERE id=? AND student_id=?", (note_id, student["id"])).fetchone()
+    if not note:
+        abort(404)
+    title = clean(request.form.get("title"), MAX_NOTE_TITLE)
+    body = clean_lines(request.form.get("body"), MAX_NOTE_BODY)
+    if not title or not body:
+        flash("Назва й текст нотатки не можуть бути порожніми.")
+        return redirect(url_for("tp.my_class") + "#personal-notes")
+    db().execute("UPDATE student_notes SET title=?,body=?,updated=? WHERE id=? AND student_id=?",
+                 (title, body, now(), note_id, student["id"]))
+    db().commit()
+    flash("Зміни до нотатки збережено.")
+    return redirect(url_for("tp.my_class") + "#personal-notes")
+
+
+@bp.post("/my-class/notes/<int:note_id>/delete")
+def student_note_delete(note_id):
+    student = _current_student_or_redirect()
+    if not student:
+        return redirect(url_for("tp.join"))
+    cursor = db().execute("DELETE FROM student_notes WHERE id=? AND student_id=?", (note_id, student["id"]))
+    if not cursor.rowcount:
+        abort(404)
+    db().commit()
+    flash("Нотатку видалено.")
+    return redirect(url_for("tp.my_class") + "#personal-notes")
 
 
 @bp.route("/my-class/calendar.json")
@@ -1228,13 +1329,15 @@ PRIV_T = """
   <ul><li><strong>Учні:</strong> ім’я чи псевдонім, який учень ввів сам, хеш PIN, клас, до якого він приєднався.</li>
   <li><strong>Результати:</strong> оцінки за контрольні, оцінки вчителя та відвідуваність у межах класу.</li>
   <li><strong>Завдання:</strong> текстові відповіді на домашні роботи, відгуки вчителя, а також посилання чи файли проєктів; відповідь бачить учень і вчитель його класу.</li>
+  <li><strong>Особисті нотатки:</strong> назва й текст зберігаються в кабінеті відповідного учня; у кабінеті вчителя вони не показуються.</li>
   <li><strong>Вчителі:</strong> ім’я, електронна пошта, хеш пароля, створені класи й матеріали.</li></ul>
   <h2>Чого ми не збираємо</h2>
   <p>Електронної пошти, телефону, адреси чи прізвища учнів. Просимо вчителів та учнів не вказувати зайвих персональних даних у іменах, нотатках і файлах.</p>
   <h2>Видалення</h2>
-  <p>Вчитель може видалити окремого учня (разом з результатами та роботами) або весь клас. Видалення остаточне.</p>
+  <p>Вчитель може видалити окремого учня (разом з результатами, роботами й нотатками) або весь клас. Видалення остаточне.</p>
   <h2>Хто що бачить</h2>
-  <p>Учень бачить лише власні оцінки й відвідуваність. Вчитель бачить записи учнів лише у своєму класі. Інші учні не мають доступу до чужих оцінок, відвідуваності або надісланих файлів.</p>
+  <p>Учень бачить власні оцінки, відвідуваність і нотатки. Учитель бачить завдання й результати учнів лише у своєму класі; особисті нотатки йому не показуються. Інші учні не мають доступу до чужих оцінок, відвідуваності, нотаток або надісланих файлів.</p>
+  <p class="muted" style="font-size:14.82px">Пароль учителя зберігається у вигляді захищеного хешу, а не відкритим текстом. Електронна пошта вчителя потрібна для входу; не використовуй той самий пароль, що й на пошті.</p>
   <p class="muted" style="font-size:14.82px">Ця сторінка — пояснення для користувачів, а не юридичний висновок. Перш ніж запроваджувати платформу у школі, узгодьте умови обробки даних зі школою.</p>
 </section>"""
 
@@ -1256,9 +1359,11 @@ def init_platform(app, show_page, grades, get_subject, get_lesson):
             key = secrets.token_hex(32)
         app.secret_key = key
     app.config.setdefault("MAX_CONTENT_LENGTH", MAX_UPLOAD + 1024 * 1024)
+    public_url = os.environ.get("PUBLIC_BASE_URL", "") or os.environ.get("RENDER_EXTERNAL_URL", "")
+    secure_cookie = public_url.lower().startswith("https://")
     app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
                       PERMANENT_SESSION_LIFETIME=timedelta(hours=10), SESSION_REFRESH_EACH_REQUEST=False,
-                      SESSION_COOKIE_SECURE=os.environ.get("PUBLIC_BASE_URL", "").startswith("https"))
+                      SESSION_COOKIE_SECURE=secure_cookie)
     app.jinja_env.globals["csrf_token"] = csrf_token
     with app.app_context():
         conn = sqlite3.connect(os.path.join(data_dir(), "rozumnyk.db"))
@@ -1286,6 +1391,8 @@ def init_platform(app, show_page, grades, get_subject, get_lesson):
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        if secure_cookie:
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         return response
 
     app.register_blueprint(bp)
@@ -1347,7 +1454,7 @@ def seed_demo(app, password=None):
         password = password or secrets.token_urlsafe(9)
         d.execute("DELETE FROM teachers WHERE email=?", (email,))
         tid = d.execute("INSERT INTO teachers(email,name,pw,created) VALUES(?,?,?,?)",
-                        (email, "Демо-вчитель", generate_password_hash(password), now())).lastrowid
+                        (email, "Демо-вчитель", hash_secret(password), now())).lastrowid
         cid = d.execute("INSERT INTO classes(teacher_id,name,grade,code,created) VALUES(?,?,?,?,?)",
                         (tid, "9-А (демо)", 9, new_code(), now())).lastrowid
         subject = get_subject_safe("algebra")
@@ -1360,7 +1467,7 @@ def seed_demo(app, password=None):
                         (cid, "project", "Проєкт: наша спільна презентація", "Підготуйте 5 слайдів і здайте посилання.", now())).lastrowid
         for n in range(1, 13):
             sid = d.execute("INSERT INTO students(class_id,nick,pin,created) VALUES(?,?,?,?)",
-                            (cid, f"Учень {n}", generate_password_hash("0000"), now())).lastrowid
+                            (cid, f"Учень {n}", hash_secret("000000"), now())).lastrowid
             for slug, lid in picks:
                 if rnd.random() < 0.8:
                     d.execute("INSERT INTO results(student_id,grade,subject_slug,lesson_id,score,total,created) VALUES(?,?,?,?,?,?,?)",
