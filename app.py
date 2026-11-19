@@ -164,7 +164,7 @@ SHELL = r"""<!doctype html>
   </header>
   <main id="main-content" tabindex="-1">{{ content|safe }}</main>
   <footer>Розумник · Навчайся у своєму темпі, відкривай нове щодня · <a href="{{ url_for('privacy_page') }}">Приватність і дані</a></footer>
-  <script src="{{ url_for('static', filename='i18n-en.js') }}?v=1"></script>
+  <script src="{{ url_for('static', filename='i18n-en.js') }}?v=2"></script>
   <script>
     const studentCanvas=document.querySelector('#student-scene');
     if(studentCanvas){
