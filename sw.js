@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rozumnyk-offline-v3';
+const CACHE_NAME = 'rozumnyk-offline-v4';
 const OFFLINE_PAGE = '/offline';
 
 self.addEventListener('install', (event) => {
@@ -6,7 +6,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME).then((cache) => cache.addAll([
       OFFLINE_PAGE,
       '/static/favicon.svg',
-      '/static/i18n-en.js?v=2',
+      '/static/i18n-en.js?v=3',
     ])),
   );
   self.skipWaiting();
