@@ -191,6 +191,21 @@ footer{border-top-color:#202d40;color:#a4b1c6}
 @media(max-width:620px){.career-atlas-heading{align-items:flex-start;padding:19px;gap:12px}.career-atlas-count{min-width:88px;padding:10px}.career-atlas-count strong{font-size:20px}.career-atlas-count span{font-size:10px}.career-atlas-controls,.career-atlas-grid,.career-modal-paths{grid-template-columns:1fr}.career-direction>summary{grid-template-columns:94px minmax(0,1fr);min-height:130px;padding:10px;gap:10px}.career-scene{height:112px}.career-direction-copy>strong{font-size:16px}.career-role-button{grid-template-columns:32px minmax(0,1fr)}.career-role-open{grid-column:2}.career-presentation{width:calc(100vw - 18px);max-height:94vh;border-radius:18px}.career-presentation-content{padding:24px 18px 22px}.career-presentation-scene{height:205px;min-height:205px}.career-atlas-sources{gap:7px 11px}}
 @media(prefers-reduced-motion:reduce){.career-scene-orbit,.career-scene-core,.career-scene-spark,.career-presentation-orbit,.career-presentation-icon,.career-presentation-cube,.career-presentation[open]{animation:none!important}.career-direction,.career-role-button,.career-scene{transition:none!important}}
 
+
+/* Larger, roomier profession presentations */
+.career-presentation{width:min(1220px,calc(100vw - 24px));max-height:min(94vh,1040px)}
+.career-presentation-inner{grid-template-columns:minmax(320px,.84fr) minmax(0,1.16fr);min-height:min(820px,calc(94vh - 4px))}
+.career-presentation-scene{min-height:min(820px,calc(94vh - 4px))}
+.career-presentation-content{padding:42px 44px 36px}
+.career-presentation-content section{margin-bottom:20px}
+.career-presentation-content h3{font-size:16px}
+.career-presentation-content p{font-size:15px;line-height:1.75}
+.career-fact-box{padding:16px 18px;border:1px solid #536a9a66;border-radius:15px;background:linear-gradient(135deg,#14273a,#1b1733)}
+.career-fact-box h3{color:#c3b2ff!important}
+.career-presentation-content h2{font-size:clamp(30px,4vw,43px)}
+@media(max-width:860px){.career-presentation{width:min(900px,calc(100vw - 22px));max-height:94vh}.career-presentation-inner{grid-template-columns:1fr;min-height:auto}.career-presentation-scene{position:relative;height:clamp(220px,30vh,310px);min-height:220px}.career-presentation-platform{bottom:8%}.career-presentation-content{padding:28px 30px 30px}}
+@media(max-width:620px){.career-presentation{width:calc(100vw - 12px);max-height:96vh}.career-presentation-scene{height:190px;min-height:190px}.career-presentation-content{padding:22px 17px 24px}.career-presentation-content h2{font-size:29px}.career-presentation-content p{font-size:14px}.career-presentation-content h3{font-size:15px}}
+
 </style>"""
 
 STRING_PATCHES = (
