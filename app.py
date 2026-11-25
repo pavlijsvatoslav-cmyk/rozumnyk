@@ -1159,6 +1159,7 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
     map_practice = (lesson.get("steps") or [lesson.get("task", "")])[0]
     passing_score = 9 if len(lesson.get("control_work", [])) == 12 else 4
     passed = submitted and score >= passing_score
+    display_grade = min(12, int(score * 12 / max(1, len(lesson.get("control_work", []))) + 0.5)) if submitted else 0
     return show_page(
         f"{lesson['title']} — {subject['name']}, {grade} клас",
         """
@@ -1175,6 +1176,7 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
           <section class="lesson-panel"><h2>📝 Моя нотатка до теми</h2><textarea data-lesson-note="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}" placeholder="Запиши свої думки або те, що хочеш повторити…" aria-label="Моя нотатка до уроку"></textarea><p class="tool-status" data-note-status>Нотатка зберігається в цьому браузері.</p></section>
           <section class="lesson-panel"><h2>🧠 Розберімося</h2><p>{{ lesson.explain }}</p></section>
           <section class="lesson-panel deeper-explanation"><h2>💬 Пояснимо трохи глибше</h2><p>{{ deeper_explanation }}</p></section>
+          {% if lesson.curiosity %}<aside class="lesson-fact"><span class="lesson-fact-label">ЦІКАВИНКА</span><p>{{ lesson.curiosity }}</p></aside>{% endif %}
           <section class="lesson-panel learning-guide"><h2>🔎 Як розібратися в темі</h2><p>Рухайся від ідеї до прикладу, а потім перевір, чи можеш застосувати її самостійно.</p><ol>{% for step in learning_steps %}<li>{{ step }}</li>{% endfor %}</ol></section>
           {{ lesson_illustration }}
           <section class="lesson-map" aria-labelledby="lesson-map-title"><h2 id="lesson-map-title">Карта теми</h2><div class="map-flow">
@@ -1194,14 +1196,48 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
           <section class="quiz" data-control-passed="{{ 'true' if passed else 'false' }}" data-lesson-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id }}">
             <p class="eyebrow">{% if lesson.nmt_prep %}ТРЕНУВАННЯ НМТ · {% else %}ТЕСТ ЗА ТЕМОЮ · {% endif %}{{ lesson.control_work|length }} ЗАПИТАНЬ</p><h2>Перевір, як ти засвоїв тему</h2>
             <p class="quiz-instructions">Обери одну відповідь у кожному завданні. Після перевірки побачиш правильні відповіді й результат.</p>
-            {% if submitted %}<div class="quiz-message {{ 'good' if passed else 'try' }}" role="status">{% if passed %}Результат: {{ score }} із {{ lesson.control_work|length }}. Тему зараховано 🌟{% else %}Результат: {{ score }} із {{ lesson.control_work|length }}. Для зарахування потрібно {{ passing_score }} правильних відповідей. Перечитай тему й спробуй ще раз.{% endif %}</div>{% endif %}
-            <form method="post" action="{{ url_for('quiz', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}">
-              {% for question in lesson.control_work %}{% set question_index = loop.index0 %}{% set picked = selected_answers[question_index] if selected_answers and selected_answers|length > question_index else '' %}<div class="control-question {% if submitted and picked == question.answer|string %}is-correct{% elif submitted and picked != '' %}is-wrong{% endif %}" data-correct="{{ question.answer }}"><h3><span class="question-number">{{ loop.index }}</span>{{ question.question }}</h3>
+            {% if submitted %}<div class="quiz-result {{ 'good' if passed else 'try' }}" role="status"><div><span class="quiz-result-kicker">РЕЗУЛЬТАТ</span><strong>{{ score }} із {{ lesson.control_work|length }} правильних</strong><p>{% if passed %}Тему зараховано 🌟{% else %}Для зарахування потрібно {{ passing_score }} правильних відповідей. Переглянь помилки й спробуй ще раз.{% endif %}</p></div><div class="quiz-grade"><span>Орієнтовна оцінка</span><strong>{{ display_grade }}<small>/ 12</small></strong></div></div>{% endif %}
+            <p class="quiz-instructions">{% if submitted %}Переглянь відповіді нижче: помилки позначені й мають правильний варіант.{% else %}Обирай відповідь — після кожного запитання тест перейде до наступного.{% endif %}</p>
+            {% if not submitted %}<div class="quiz-progress-label" data-quiz-progress-label aria-live="polite">Запитання 1 з {{ lesson.control_work|length }}</div>
+            <div class="quiz-progress-track" role="progressbar" aria-label="Прогрес тесту" aria-valuemin="1" aria-valuemax="{{ lesson.control_work|length }}" aria-valuenow="1"><span data-quiz-progress-fill></span></div>{% endif %}
+            <form method="post" action="{{ url_for('quiz', subject_slug=subject.slug, lesson_id=lesson_id, grade=grade) }}" data-step-quiz>
+              {% for question in lesson.control_work %}{% set question_index = loop.index0 %}{% set picked = selected_answers[question_index] if selected_answers and selected_answers|length > question_index else '' %}<div class="control-question quiz-question-step {% if submitted and picked == question.answer|string %}is-correct{% elif submitted and picked != '' %}is-wrong{% endif %}" data-correct="{{ question.answer }}" data-quiz-question><h3><span class="question-number">{{ loop.index }}</span>{{ question.question }}</h3>
                 {% for option in question.options %}<label class="choice {% if submitted and question.answer == loop.index0 %}correct-choice{% elif submitted and picked == loop.index0|string %}wrong-choice{% endif %}"><input type="radio" name="answer_{{ question_index }}" value="{{ loop.index0 }}" {% if picked == loop.index0|string %}checked{% endif %} required> <span>{{ option }}</span></label>{% endfor %}
-                {% if submitted %}<p class="answer-feedback">{% if picked == question.answer|string %}Правильно!{% else %}Правильна відповідь: {{ question.options[question.answer] }}{% endif %}</p>{% endif %}
+                {% if submitted %}<p class="answer-feedback">{% if picked == question.answer|string %}Правильно!{% else %}<strong>Твоя відповідь:</strong> {{ question.options[picked|int] if picked else 'Без відповіді' }}<br><strong>Виправлення:</strong> {{ question.options[question.answer] }}{% endif %}</p>{% endif %}
               </div>{% endfor %}
-              <button class="button" type="submit">Перевірити відповіді <span>→</span></button>
+              <div class="quiz-step-controls">
+                <button class="access-button" type="button" data-quiz-previous hidden>← Попереднє питання</button>
+                <p class="quiz-step-status" data-quiz-step-status aria-live="polite"></p>
+                <button class="button quiz-finish" type="submit" data-quiz-finish>Завершити тест <span>→</span></button>
+              </div>
             </form>
+            {% if not submitted %}<script>
+            (function(){
+              var root=document.currentScript.closest('.quiz'),form=root&&root.querySelector('[data-step-quiz]');
+              if(!form)return;
+              var steps=Array.from(form.querySelectorAll('[data-quiz-question]'));
+              var label=root.querySelector('[data-quiz-progress-label]'),track=root.querySelector('.quiz-progress-track'),fill=root.querySelector('[data-quiz-progress-fill]');
+              var previous=root.querySelector('[data-quiz-previous]'),finish=root.querySelector('[data-quiz-finish]'),status=root.querySelector('[data-quiz-step-status]');
+              if(!steps.length)return;
+              var current=0;
+              function answered(i){return !!steps[i].querySelector('input[type="radio"]:checked')}
+              function show(i,focus){
+                current=i;steps.forEach(function(step,n){step.hidden=n!==current});
+                label.textContent='Запитання '+(current+1)+' з '+steps.length;
+                track.setAttribute('aria-valuenow',String(current+1));fill.style.width=((current+1)/steps.length*100)+'%';
+                previous.hidden=current===0;finish.hidden=current!==steps.length-1||!answered(current);
+                if(focus){var h=steps[current].querySelector('h3');h.focus({preventScroll:true});steps[current].scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'center'})}
+              }
+              steps.forEach(function(step,i){step.hidden=i!==0});finish.hidden=true;show(0,false);
+              form.addEventListener('change',function(event){
+                if(!event.target.matches('input[type="radio"]'))return;
+                var index=steps.indexOf(event.target.closest('[data-quiz-question]'));if(index!==current)return;
+                if(current<steps.length-1){status.textContent='Відповідь збережено. Наступне запитання…';window.setTimeout(function(){if(current===index&&answered(index))show(index+1,true)},320)}
+                else{status.textContent='Останнє запитання. Заверши тест, щоб побачити оцінку й помилки.';finish.hidden=false;finish.focus()}
+              });
+              previous.addEventListener('click',function(){if(current>0)show(current-1,true)});
+            })();
+            </script>{% endif %}
           </section>          <nav class="lesson-nav">
             {% if lesson_id > 1 %}<a href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=lesson_id-1, grade=grade) }}">← Попередня тема</a>{% else %}<span></span>{% endif %}
             {% if lesson_id < subject.lessons|length %}<p data-next-topic-hint>Пройди контрольну, щоб відкрити наступну тему.</p><a href="{{ url_for('lesson_page', subject_slug=subject.slug, lesson_id=lesson_id+1, grade=grade) }}" data-next-topic-link data-next-topic-key="{{ grade }}:{{ subject.slug }}:{{ lesson_id+1 }}" hidden>Наступна тема →</a>{% else %}<a href="{{ url_for('subject_page', slug=subject.slug, grade=grade) }}">До всіх тем →</a>{% endif %}
@@ -1214,6 +1250,7 @@ def lesson_content(subject, lesson, lesson_id, grade, submitted=False, score=0, 
         grade=grade,
         submitted=submitted,
         score=score,
+        display_grade=display_grade,
         passing_score=passing_score,
         selected_answers=selected_answers,
         learning_steps=learning_steps,

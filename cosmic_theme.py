@@ -148,6 +148,38 @@ footer{border-top-color:#202d40;color:#a4b1c6}
 @keyframes theory-draw{from{stroke-dashoffset:500}to{stroke-dashoffset:0}}@keyframes theory-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}@keyframes theory-orbit{to{transform:rotate(360deg)}}
 @media(max-width:700px){.theory-illustration{grid-template-columns:1fr;gap:4px}.theory-diagram{max-height:210px}.theory-illustration .visual-copy h2{font-size:24px}}
 @media(prefers-reduced-motion:reduce){.theory-diagram,.diagram-core,.diagram-orbit,.diagram-line{animation:none!important;transition:none!important}.theory-diagram{transform:none}}
+
+/* Покроковий тест, короткі цікавинок й читабельний розбір помилок */
+.lesson-fact{display:flex;gap:14px;align-items:flex-start;margin:18px 0;padding:18px 20px;border:1px solid rgba(125,111,230,.35);border-radius:16px;background:linear-gradient(120deg,rgba(124,101,220,.15),rgba(41,137,121,.10));box-shadow:0 12px 26px rgba(4,9,20,.18)}
+.lesson-fact-label,.quiz-result-kicker{flex:0 0 auto;color:#b7aaff;font-size:11px;font-weight:900;letter-spacing:.14em}
+.lesson-fact p{margin:0;color:#e2e8f3;line-height:1.65}
+.quiz-instructions{margin:0 0 16px;color:#c5d0e1;line-height:1.65}
+.quiz-progress-label{margin:12px 0 8px;color:#e5e9f5;font-weight:750}
+.quiz-progress-track{height:9px;margin-bottom:18px;overflow:hidden;border-radius:99px;background:#1b2638}
+.quiz-progress-track span{display:block;width:8%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#58d2ad,#aa91ff);transition:width .28s ease}
+.quiz-question-step[hidden],.quiz-step-controls [hidden]{display:none!important}
+.quiz-question-step{min-height:220px;padding:20px;border:1px solid #39465b;border-radius:18px;background:linear-gradient(150deg,rgba(22,34,52,.96),rgba(16,23,40,.95));animation:quiz-enter .28s ease both}
+.quiz-question-step h3{margin:0 0 20px;color:#f7f8ff;font-size:clamp(19px,2.2vw,25px);line-height:1.4}
+.quiz-question-step h3:focus{outline:2px solid #80dfc2;outline-offset:5px;border-radius:4px}
+.quiz-choices{display:grid;gap:10px}
+.quiz-question-step .choice{min-height:48px;display:flex;align-items:center;gap:11px;padding:12px 14px;border:1px solid #38465b;border-radius:12px;background:rgba(255,255,255,.035);color:#e0e6f0;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.quiz-question-step .choice:hover{transform:translateY(-1px);border-color:#7d72d9;background:rgba(125,114,217,.12)}
+.quiz-question-step .choice input{accent-color:#8a7bf0}
+.quiz-step-controls{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px}
+.quiz-step-status{flex:1;margin:0;color:#9be8ca;font-size:14px;text-align:center}
+.quiz-finish[hidden]{display:none!important}
+.quiz-result{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:16px 0;padding:20px;border:1px solid #45516a;border-radius:18px;background:linear-gradient(120deg,rgba(82,197,155,.12),rgba(126,108,228,.15))}
+.quiz-result.good{border-color:rgba(84,205,160,.6)}.quiz-result.try{border-color:rgba(255,190,117,.55)}
+.quiz-result>div:first-child{display:grid;gap:6px}.quiz-result-kicker{color:#8fe0c4}.quiz-result strong{color:#f7f8ff;font-size:22px}.quiz-result p{margin:0;color:#c5d0e1;line-height:1.5}
+.quiz-grade{min-width:116px;display:grid;justify-items:center;gap:2px;padding:12px;border:1px solid rgba(176,155,255,.4);border-radius:14px;background:rgba(13,19,35,.45)}
+.quiz-grade span{color:#c7bee9;font-size:12px}.quiz-grade strong{font-size:34px;color:#e7ddff}.quiz-grade small{font-size:15px;color:#b9c3d7}
+.quiz-perfect{padding:16px;border:1px solid rgba(86,204,158,.5);border-radius:14px;color:#b8f0d8;background:rgba(54,151,114,.11)}
+.quiz-retry{display:inline-flex;margin-top:8px}
+.answer-feedback{margin:9px 0 0;color:#b8f0d8;font-size:15px;line-height:1.6}.control-question.is-wrong .answer-feedback{color:#ffd08d}
+@keyframes quiz-enter{from{opacity:0;transform:translateY(8px) rotateX(-2deg)}to{opacity:1;transform:none}}
+@media(max-width:600px){.quiz-result{align-items:stretch;flex-direction:column}.quiz-grade{grid-template-columns:1fr auto;justify-items:start;align-items:center}.quiz-step-controls{flex-wrap:wrap}.quiz-step-status{order:3;flex-basis:100%;text-align:left}.quiz-question-step{padding:15px}.lesson-fact{flex-direction:column;gap:6px;padding:15px}}
+@media(prefers-reduced-motion:reduce){.quiz-question-step{animation:none}.quiz-progress-track span,.quiz-question-step .choice{transition:none}}
+
 </style>"""
 
 STRING_PATCHES = (
