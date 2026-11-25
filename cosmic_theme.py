@@ -133,6 +133,21 @@ footer{border-top-color:#202d40;color:#a4b1c6}
 .student-fallback{z-index:2}
 @media(max-width:900px){.fact-section{padding:22px}.fact-grid{grid-template-columns:1fr 1fr}.fact-card:last-child{grid-column:1/-1}}
 @media(max-width:620px){.fact-section{margin-top:30px;padding:17px;border-radius:18px}.fact-section-head{display:block}.fact-section-head>p{margin-top:9px}.fact-grid{grid-template-columns:1fr}.fact-card,.fact-card:last-child{grid-column:auto;min-height:0;padding:20px}.fact-card h3{font-size:21px}}
+/* Теоретичні теми: наочні SVG-схеми з легкою глибиною та рухом */
+.theory-illustration{display:grid;grid-template-columns:minmax(210px,.85fr) minmax(260px,1.15fr);align-items:center;gap:20px;perspective:1100px;overflow:hidden}
+.theory-illustration .visual-copy .eyebrow{color:#85e3c2;font-size:12px;font-weight:850;letter-spacing:.14em}
+.theory-illustration .visual-copy h2{margin:4px 0 10px;font-size:clamp(23px,2.6vw,32px);line-height:1.15;color:#f6f5ff}
+.theory-illustration .visual-copy p:last-child{margin:0;color:#c2cde0;line-height:1.65}
+.theory-diagram{width:100%;max-height:250px;overflow:visible;transform:rotateX(4deg) rotateY(-5deg);transform-style:preserve-3d;filter:drop-shadow(0 15px 18px rgba(4,9,20,.38));transition:transform .55s cubic-bezier(.2,.75,.25,1),filter .55s ease}
+.theory-illustration:hover .theory-diagram,.theory-illustration:focus-within .theory-diagram{transform:rotateX(0) rotateY(0) translateY(-3px) scale(1.025);filter:drop-shadow(0 22px 24px rgba(102,91,221,.24))}
+.diagram-card,.diagram-chip,.diagram-cell,.diagram-solid,.diagram-decision{fill:rgba(128,105,235,.15);stroke:#8b82f4;stroke-width:2}
+.diagram-chip{fill:rgba(98,211,176,.15);stroke:#67d7b8}.diagram-solid{fill:rgba(91,178,226,.19);stroke:#92b7ff;stroke-width:3}.diagram-area{fill:rgba(137,115,242,.16);stroke:none}
+.diagram-line{fill:none;stroke:#ffc979;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:500;stroke-dashoffset:0;animation:theory-draw 1.3s ease both}
+.diagram-grid{fill:none;stroke:#8c9ab8;stroke-opacity:.18;stroke-width:1.2}.diagram-node{fill:#67d7b8;stroke:#d3fff2;stroke-width:2;filter:url(#theory-shadow)}.diagram-core{fill:#ffc979;stroke:#fff0cf;stroke-width:2;filter:url(#theory-shadow);transform-box:fill-box;transform-origin:center;animation:theory-pulse 3.2s ease-in-out infinite}.diagram-orbit{fill:none;stroke:#9685f1;stroke-opacity:.7;stroke-width:1.5;stroke-dasharray:5 5;transform-box:fill-box;transform-origin:center;animation:theory-orbit 18s linear infinite}.diagram-label{fill:#f3f5ff;font-size:12px;font-weight:800;letter-spacing:.08em}.diagram-label.small{font-size:10px;fill:#c5d0e1;letter-spacing:0}.diagram-bars rect,.color-slice{fill:rgba(99,215,185,.55);stroke:#a1f0d7;stroke-width:1.5}.diagram-bars rect:nth-child(even),.color-slice.alt{fill:rgba(143,119,244,.5);stroke:#c5b7ff}.diagram-donut,.diagram-center{fill:none;stroke:rgba(110,218,188,.35);stroke-width:20}.diagram-center{fill:#101a2c;stroke:none}.diagram-edge{fill:none;stroke:#ffc979;stroke-width:2;stroke-dasharray:4 5}
+.quiz-instructions{margin:0 0 18px;color:#c4cde0;line-height:1.6}.question-number{display:inline-grid;place-items:center;width:30px;height:30px;margin-right:10px;border-radius:10px;background:rgba(129,112,238,.2);color:#e5ddff;font-size:14px}.control-question.is-correct{border-color:rgba(94,210,169,.65)}.control-question.is-wrong{border-color:rgba(255,127,132,.62)}.choice.correct-choice{border-color:#53c59c;background:rgba(61,177,139,.13)}.choice.wrong-choice{border-color:#ec858a;background:rgba(219,83,98,.12)}.answer-feedback{margin:9px 0 0;color:#b8f0d8;font-size:15px;line-height:1.5}.control-question.is-wrong .answer-feedback{color:#ffd08d}
+@keyframes theory-draw{from{stroke-dashoffset:500}to{stroke-dashoffset:0}}@keyframes theory-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}@keyframes theory-orbit{to{transform:rotate(360deg)}}
+@media(max-width:700px){.theory-illustration{grid-template-columns:1fr;gap:4px}.theory-diagram{max-height:210px}.theory-illustration .visual-copy h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.theory-diagram,.diagram-core,.diagram-orbit,.diagram-line{animation:none!important;transition:none!important}.theory-diagram{transform:none}}
 </style>"""
 
 STRING_PATCHES = (
