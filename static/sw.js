@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rozumnyk-offline-v4';
+const CACHE_NAME = 'rozumnyk-offline-v5';
 const OFFLINE_PAGE = '/offline';
 
 self.addEventListener('install', (event) => {
@@ -42,6 +42,29 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/teacher') || url.pathname.startsWith('/my-class') ||
       url.pathname.startsWith('/join') || url.pathname.startsWith('/f/') ||
       url.pathname.startsWith('/m/')) return;
+
+  const publicPage = url.pathname === '/' || url.pathname === '/missions' ||
+    url.pathname === '/laboratories' || url.pathname.startsWith('/subject/');
+
+  if (publicPage) {
+    const update = (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      const response = await fetch(request);
+      if (response.ok) await cache.put(request, response.clone());
+      return response;
+    })();
+    event.waitUntil(update.then(() => undefined).catch(() => undefined));
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      try {
+        return await update;
+      } catch (error) {
+        return (await caches.match(OFFLINE_PAGE)) || Response.error();
+      }
+    })());
+    return;
+  }
 
   event.respondWith((async () => {
     try {

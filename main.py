@@ -33,16 +33,21 @@ apply_grade9_more(curriculum.GRADES, curriculum.rich_lesson)
 curriculum.add_control_works()  # контрольні для нових тем (для решти тем результат той самий)
 
 from app import GRADES, app, get_lesson, get_subject, show_page  # noqa: E402
-from teacher_platform import data_dir, init_platform, seed_demo  # noqa: E402
+# Учительський кабінет тимчасово вимкнений. Його можна повернути,
+# встановивши ENABLE_TEACHER_PLATFORM=1 у змінних середовища.
+if os.environ.get("ENABLE_TEACHER_PLATFORM") == "1":
+    from teacher_platform import data_dir, init_platform, seed_demo  # noqa: E402
 
-init_platform(app, show_page, GRADES, get_subject, get_lesson)
+    init_platform(app, show_page, GRADES, get_subject, get_lesson)
 
 from cosmic_theme import apply_cosmic_theme  # noqa: E402
 
 apply_cosmic_theme(app, show_page)
 
-# Демо-клас для презентації: задайте DEMO_PASSWORD, і він з’явиться при першому запуску.
-if os.environ.get("DEMO_PASSWORD") and not os.path.exists(os.path.join(data_dir(), ".demo_seeded")):
+# Демо-клас створюється лише тоді, коли ввімкнений кабінет учителя.
+if (os.environ.get("ENABLE_TEACHER_PLATFORM") == "1" and
+        os.environ.get("DEMO_PASSWORD") and
+        not os.path.exists(os.path.join(data_dir(), ".demo_seeded"))):
     seed_demo(app, password=os.environ["DEMO_PASSWORD"])
     open(os.path.join(data_dir(), ".demo_seeded"), "w").close()
 
