@@ -1521,39 +1521,37 @@ def career_guide():
             current_answer = selected_answers[current_step]
             if current_answer not in CAREER_CATEGORIES:
                 error_message = "Обери один варіант, щоб перейти далі."
+            elif current_step < len(CAREER_QUESTIONS) - 1:
+                current_step += 1
             else:
-                if current_step < len(CAREER_QUESTIONS) - 1:
-                    current_step += 1
-                else:
-                    scores = {key: 0 for key in CAREER_CATEGORIES}
-                    for answer in selected_answers:
-                        if answer in scores:
-                            scores[answer] += 1
-                    best = sorted(CAREER_CATEGORIES, key=lambda key: scores[key], reverse=True)
-                    best = [key for key in best if scores[key] > 0][:2]
-                    results = [
-                        {
-                            "name": CAREER_CATEGORIES[key]["name"],
-                            "professions": CAREER_CATEGORIES[key]["professions"],
-                            "skills": CAREER_CATEGORIES[key]["skills"],
-                            "pathway": CAREER_CATEGORIES[key][stage],
-                            "points": scores[key],
-                        }
-                        for key in best
-                    ]
-                    answer_review = [
-                        {
-                            "prompt": question["prompt"],
-                            "category": CAREER_CATEGORIES[selected_answers[index]]["name"],
-                            "answer": next(
-                                option_text
-                                for category, option_text in question["choices"]
-                                if category == selected_answers[index]
-                            ),
-                        }
-                        for index, question in enumerate(CAREER_QUESTIONS)
-                    ]
-                    submitted = True
+                scores = {key: 0 for key in CAREER_CATEGORIES}
+                for answer in selected_answers:
+                    scores[answer] += 1
+                best = sorted(CAREER_CATEGORIES, key=lambda key: scores[key], reverse=True)
+                best = [key for key in best if scores[key] > 0][:2]
+                results = [
+                    {
+                        "name": CAREER_CATEGORIES[key]["name"],
+                        "professions": CAREER_CATEGORIES[key]["professions"],
+                        "skills": CAREER_CATEGORIES[key]["skills"],
+                        "pathway": CAREER_CATEGORIES[key][stage],
+                        "points": scores[key],
+                    }
+                    for key in best
+                ]
+                answer_review = [
+                    {
+                        "prompt": question["prompt"],
+                        "category": CAREER_CATEGORIES[selected_answers[index]]["name"],
+                        "answer": next(
+                            option_text
+                            for category, option_text in question["choices"]
+                            if category == selected_answers[index]
+                        ),
+                    }
+                    for index, question in enumerate(CAREER_QUESTIONS)
+                ]
+                submitted = True
     else:
         try:
             current_step = int(request.args.get("step", "0"))
@@ -1727,24 +1725,6 @@ def career_guide():
         answer_review=answer_review,
         current_step=current_step,
         selected_answers=selected_answers,
-        submitted=submitted,
-        error_message=error_message,
-        meta_description=(
-            "Освітні варіанти після 9-го та 12-го класу й тест для дослідження "
-            "власних інтересів і можливих професійних напрямів."
-        ),
-        robots_noindex=request.method == "POST",
-    )
-
-ій';empty.hidden=shown>0}search.addEventListener('input',update);filter.addEventListener('change',update);root.addEventListener('click',event=>{const button=event.target.closest('[data-career-role]');if(!button)return;returnFocus=button;for(const key of ['title','day','impact','fact','skills','try','after9','after12'])dialog.querySelector('[data-modal-'+key+']').textContent=button.dataset[key];dialog.querySelector('[data-modal-icon]').textContent=button.dataset.icon;dialog.querySelector('[data-modal-scene]').dataset.modalScene=button.dataset.scene;dialog.showModal();dialog.querySelector('[data-career-close]').focus()});dialog.querySelector('[data-career-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus()});update()})();</script>
-        <script>(()=>{const root=document.querySelector('[data-career-tasters]');if(!root)return;const key='rozumnyk-career-tasters-v1';let done={};try{done=JSON.parse(localStorage.getItem(key)||'{}')}catch(_){}function mark(card){card.classList.add('is-complete');done[card.dataset.taster]=true;try{localStorage.setItem(key,JSON.stringify(done))}catch(_){}}root.querySelectorAll('[data-taster]').forEach(card=>{if(done[card.dataset.taster])card.classList.add('is-complete')});root.addEventListener('click',event=>{const button=event.target.closest('[data-taster-action]');if(!button)return;const card=button.closest('[data-taster]'),out=card.querySelector('[data-taster-output]'),action=button.dataset.tasterAction;if(action==='average'){out.textContent='Середній час — 15 хвилин: (12 + 17 + 15 + 16) ÷ 4.';mark(card)}if(action==='experiment'){const value=card.querySelector('[data-variable]').value;out.textContent=value==='temperature'?'Так! Змінюй температуру, а кількість води, цукру й перемішування залиш однаковими.':value?'У чесному порівнянні змінюй одну умову й тримай інші однаковими. Спробуй температуру води.':'Спершу обери змінну.';if(value==='temperature')mark(card)}if(action==='explain'){const text=card.querySelector('[data-explanation]').value.trim();out.textContent=!text?'Додай своє пояснення.':text.length<35?'Додай приклад і поясни, що означають числа.':'Гарний початок! Переконайся, що є правило й приклад: 4 × 3 = 12 кв. од.';if(text.length>=35)mark(card)}if(action==='circuit'){const value=card.querySelector('[data-circuit-answer]').value;out.textContent=value==='open'?'Саме так: розімкнене коло не має повного шляху для струму.':'Перевір, чи шлях між джерелом і лампою замкнений. Це цифрова модель, працювати зі справжньою електрикою не потрібно.';if(value==='open')mark(card)}});const palette=root.querySelector('[data-palette]'),preview=root.querySelector('[data-palette-preview]');function paint(){const colors={mint:['#ddf5e7','#3d755f'],violet:['#eee6ff','#62439a'],sun:['#fff0c4','#96631a']},pair=colors[palette.value];preview.style.background='linear-gradient(120deg,'+pair[0]+',#fff)';preview.style.color=pair[1];preview.textContent='Обраний настрій — '+palette.options[palette.selectedIndex].text.toLowerCase()+'.';mark(root.querySelector('[data-taster="designer"]'))}palette.addEventListener('change',paint);const budgets=[...root.querySelectorAll('[data-budget]')],budgetOut=root.querySelector('[data-budget-output]');function total(){const sum=budgets.reduce((acc,input)=>acc+(Number(input.value)||0),0);budgetOut.textContent='Разом: '+sum+' із 1000. '+(sum===1000?'Бюджет збалансований.':sum<1000?'Залишилося '+(1000-sum)+'.':'Перевищення — '+(sum-1000)+'.');if(sum===1000)mark(root.querySelector('[data-taster="entrepreneur"]'))}budgets.forEach(input=>input.addEventListener('input',total));total()})();</script>
-        """,
-        grade=active_grade(),
-        career_directions=CAREER_3D_DIRECTIONS,
-        career_categories=CAREER_CATEGORIES,
-        stage=stage,
-        questions=questions,
-        results=results,
         submitted=submitted,
         error_message=error_message,
         meta_description=(
