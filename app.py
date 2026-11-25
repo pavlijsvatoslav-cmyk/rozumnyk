@@ -1242,8 +1242,37 @@ def study_items():
 
 @app.get("/learning-tools")
 def learning_tools():
-    """Temporarily keep the personal tools area out of the student navigation."""
-    return redirect(url_for("index", grade=active_grade()))
+    if os.environ.get("ENABLE_LEARNING_TOOLS") != "1":
+        return redirect(url_for("index", grade=active_grade()))
+    return show_page(
+        "Мої інструменти",
+        """
+        <nav class="crumb"><a href="{{ url_for('index', grade=grade) }}">Предмети</a>　/　Мої інструменти</nav>
+        <p class="eyebrow">ТВІЙ ОСОБИСТИЙ НАВЧАЛЬНИЙ ПРОСТІР</p><h1>Мої інструменти й налаштування</h1>
+        <p class="intro">Плануй навчання, повертайся до збережених тем, переглядай помилки й відзначай свої успіхи. Ці дані зберігаються лише в цьому браузері.</p>
+        <section class="calendar-panel" data-study-calendar data-grade="{{ grade }}" aria-labelledby="calendar-title">
+          <div class="calendar-head"><button type="button" data-calendar-shift="-1" aria-label="Попередній місяць">←</button><h2 id="calendar-title" data-calendar-month>Календар навчання</h2><button type="button" data-calendar-shift="1" aria-label="Наступний місяць">→</button></div>
+          <div class="calendar-layout"><div><div class="calendar-grid" data-calendar-grid aria-label="Дні місяця"></div><div class="calendar-events" data-calendar-events aria-live="polite"></div></div>
+            <form class="calendar-event-form" data-calendar-form><label>Що запланувати<input name="title" maxlength="100" required placeholder="Наприклад, повторити дроби"></label><label>Дата<input name="date" type="date" required></label><label>Навчальна тема (необов’язково)<select name="lesson" data-calendar-topic><option value="">Без посилання на тему</option></select></label><button type="submit">Додати до календаря</button></form>
+          </div><p class="calendar-caption">Плани зберігаються у цьому браузері. Домашні завдання класу з терміном вказує вчитель у кабінеті класу.</p>
+        </section>
+        <div class="tool-grid" data-learning-tools data-grade="{{ grade }}">
+          <section class="tool-card calculator-card" aria-labelledby="calculator-title"><h2 id="calculator-title">Калькулятор</h2><p>Чотири основні дії — без зайвих кнопок.</p><output class="calculator-display" data-calculator-display aria-live="polite">0</output><div class="calculator-keys" data-calculator-keys><button class="calculator-key" data-calc-key="C" type="button">C</button><button class="calculator-key" data-calc-key="⌫" type="button" aria-label="Стерти останню цифру">⌫</button><button class="calculator-key" data-calc-key="÷" type="button" aria-label="Ділення">÷</button><button class="calculator-key" data-calc-key="×" type="button" aria-label="Множення">×</button><button class="calculator-key" data-calc-key="7" type="button">7</button><button class="calculator-key" data-calc-key="8" type="button">8</button><button class="calculator-key" data-calc-key="9" type="button">9</button><button class="calculator-key" data-calc-key="−" type="button" aria-label="Віднімання">−</button><button class="calculator-key" data-calc-key="4" type="button">4</button><button class="calculator-key" data-calc-key="5" type="button">5</button><button class="calculator-key" data-calc-key="6" type="button">6</button><button class="calculator-key" data-calc-key="+" type="button">+</button><button class="calculator-key" data-calc-key="1" type="button">1</button><button class="calculator-key" data-calc-key="2" type="button">2</button><button class="calculator-key" data-calc-key="3" type="button">3</button><button class="calculator-key" data-calc-key="=" type="button">=</button><button class="calculator-key" data-calc-key="0" type="button">0</button><button class="calculator-key" data-calc-key="." type="button" aria-label="Десяткова крапка">.</button></div><p class="calculator-status" data-calculator-status aria-live="polite"></p></section>
+          <section class="tool-card personal-route-card"><h2>🧭 Мій персональний маршрут</h2><p>Обери мету й темп. План спершу запропонує незавершені теми та питання з черги помилок; дані залишаються у цьому браузері.</p><form data-plan-form><label>Мета<select name="goal"><option value="nmt">Підготуватися до НМТ</option><option value="catchup">Надолужити теми</option><option value="explore">Досліджувати предмети</option></select></label><label>Планувати до<input type="date" name="targetDate"></label><label>Днів навчання на тиждень <input type="number" name="days" min="1" max="7" value="5"></label><label>Хвилин на день <input type="number" name="minutes" min="10" max="180" step="5" value="25"></label><p>Предмети:</p><div class="tool-controls" data-plan-subjects></div><button class="button" type="submit">Скласти мій маршрут</button></form><div class="tool-list" data-plan-output></div></section>
+          <section class="tool-card"><h2>🔖 Закладки</h2><p>Теми, до яких хочеться швидко повернутися.</p><div class="tool-list" data-bookmark-list></div></section>
+          <section class="tool-card"><h2>📝 Нотатки</h2><p>Твої короткі записи з уроків.</p><div class="tool-list" data-note-list></div></section>
+          <section class="tool-card"><h2>🔁 Повторення помилок</h2><p>Переглянь питання, у яких помилився/помилилася, і повтори відповідні теми. У контрольній можна пройти завдання знову; поруч є посилання на інші уроки предмета.</p><div class="tool-list" data-mistake-list></div></section>
+          <section class="tool-card"><h2>🏅 Досягнення та регулярність</h2><p>Зараховані уроки й дні активного навчання допоможуть бачити поступ.</p><div class="tool-list" data-achievement-list></div></section>
+          <section class="tool-card"><h2>♿ Доступність</h2><p>Налаштуй зручний розмір тексту, контрастність або мову сторінки.</p><div class="tool-controls"><button class="access-button" data-font="increase" type="button">A+ Збільшити шрифт</button><button class="access-button" data-contrast type="button">◐ Контраст</button><button class="access-button" data-language type="button">UA/EN</button></div><p>Англійська версія використовує вбудовані переклади й не потребує ключа або платного сервісу. Переклад пояснень уроків поступово додається.</p></section>
+          <section class="tool-card daily-practice-card"><h2>✨ Щоденний виклик</h2><p>Одне коротке запитання з предмета твого класу на кожен день.</p><a class="button" href="{{ url_for('daily_practice', grade=grade) }}">Відкрити завдання дня →</a><p data-daily-streak>Завершуй завдання щодня й стеж за регулярністю.</p></section>
+          <section class="tool-card offline-card"><h2>📴 Уроки офлайн</h2><p>Збережи потрібну тему на цьому пристрої, щоб повернутися до неї без інтернету.</p><p data-install-status aria-live="polite">На сторінці уроку натисни «Зберегти для офлайну».</p><button class="access-button" data-install-app type="button" hidden>Встановити Розумник</button></section>
+        </div>
+        <section class="career-path"><p class="eyebrow">ПРО ПРОФЕСІЇ</p><h2>Досліджуй напрям, який тебе зацікавив</h2><p>У профорієнтаційному розділі є приклади професій і посилання на офіційні ресурси, де можна перевірити професійні програми та заклади. Переглянь програми в <a href="https://proftech.mon.gov.ua/" target="_blank" rel="noopener">порталі професійної освіти</a> або знайди освітні програми через <a href="https://registry.edbo.gov.ua/" target="_blank" rel="noopener">ЄДЕБО</a>. Умови вступу перевіряй безпосередньо в обраному закладі.</p><a class="button" href="{{ url_for('career_guide', grade=grade) }}">Перейти до тесту про професії →</a></section>
+        """,
+        grade=active_grade(),
+        robots_noindex=True,
+    )
+
 
 @app.route("/career-guide", methods=["GET", "POST"])
 def career_guide():
