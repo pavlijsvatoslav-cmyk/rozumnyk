@@ -1515,6 +1515,8 @@ def career_guide():
             error_message = "Не вдалося прочитати відповідь. Обери варіант ще раз."
         elif request.form.get("quiz_action") == "back":
             current_step = max(0, current_step - 1)
+        elif current_step == len(CAREER_QUESTIONS) - 1 and any(answer not in CAREER_CATEGORIES for answer in selected_answers):
+            error_message = "Потрібно відповісти на всі запитання. Повернись до першого пропущеного кроку."
         else:
             current_answer = selected_answers[current_step]
             if current_answer not in CAREER_CATEGORIES:
