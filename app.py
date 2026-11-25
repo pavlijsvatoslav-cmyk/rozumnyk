@@ -59,6 +59,138 @@ CAREER_CATEGORIES = {
     },
 }
 
+
+
+CAREER_3D_DIRECTIONS = [
+    {
+        "slug": "digital", "parent": "stem", "name": "Цифрові технології, ШІ й дані", "icon": "💻",
+        "summary": "Створювати програми, аналізувати інформацію та захищати цифрові системи.",
+        "professions": [
+            {"title": "Розробник програмного забезпечення", "icon": "🧑‍💻", "day": "Проєктує функції, пише код, тестує його на різних випадках і разом із командою вдосконалює продукт.", "skills": "логічне мислення, програмування, командна робота, уважність до користувачів", "try": "На папері опиши кроки алгоритму, який сортує книжки за назвою."},
+            {"title": "Аналітик даних", "icon": "📊", "day": "Очищає таблиці, шукає закономірності та пояснює команді, що дані показують, а чого не доводять.", "skills": "математика, таблиці, критичне мислення, зрозуміле пояснення", "try": "Порахуй середній час дороги за чотирма числами й поясни, чи описує він кожен день."},
+            {"title": "Фахівець із кібербезпеки", "icon": "🛡️", "day": "Допомагає знаходити слабкі місця в системах, налаштовує захист і навчає команду безпечної поведінки.", "skills": "мережі, уважність, етика, аналіз ризиків", "try": "Склади три поради, як захистити навчальний обліковий запис. Не перевіряй чужі акаунти."}
+        ]
+    },
+    {
+        "slug": "engineering", "parent": "stem", "name": "Інженерія, робототехніка й енергетика", "icon": "⚙️",
+        "summary": "Проєктувати механізми, автоматизовані системи, будівлі та енергетичні рішення.",
+        "professions": [
+            {"title": "Інженер з автоматизації", "icon": "🤖", "day": "Поєднує датчики, механізми й керувальні програми, тестує прототипи та перевіряє безпеку.", "skills": "фізика, електроніка, креслення, пошук несправностей", "try": "Намалюй схему автоматичного поливу: датчик, контролер і клапан."},
+            {"title": "Інженер відновлюваної енергетики", "icon": "☀️", "day": "Оцінює умови майданчика, підбирає енергетичне обладнання та стежить за ефективністю системи.", "skills": "фізика, математика, екологічне мислення, робота з даними", "try": "Порівняй, коли сонячна панель отримує більше світла: вранці чи опівдні."},
+            {"title": "Інженер-будівельник", "icon": "🏗️", "day": "Читає креслення, розраховує конструкції та співпрацює з архітекторами й будівельною командою.", "skills": "геометрія, фізика, точність, відповідальність", "try": "Накресли план зручного класу й познач безпечні проходи."}
+        ]
+    },
+    {
+        "slug": "science", "parent": "health", "name": "Наука, природа й довкілля", "icon": "🔬",
+        "summary": "Досліджувати явища, екосистеми та зміни довкілля на основі доказів.",
+        "professions": [
+            {"title": "Еколог", "icon": "🌿", "day": "Збирає спостереження про довкілля, аналізує впливи та готує пропозиції для збереження природи.", "skills": "біологія, польові спостереження, статистика, аргументація", "try": "Запиши, які рослини й комахи можна спостерігати біля школи, не торкаючись їх."},
+            {"title": "Науковий дослідник", "icon": "🧪", "day": "Формулює запитання, планує безпечний дослід, фіксує результати й перевіряє пояснення.", "skills": "цікавість, методи дослідження, точний запис, терпіння", "try": "Придумай дослід, у якому змінюється лише одна умова."},
+            {"title": "Фахівець із геоданих", "icon": "🗺️", "day": "Поєднує карти й просторові дані, щоб досліджувати природу, громади або транспорт.", "skills": "географія, карти, цифрові інструменти, аналіз", "try": "Намалюй карту маршруту до школи й додай умовні позначення."}
+        ]
+    },
+    {
+        "slug": "health", "parent": "health", "name": "Медицина, турбота й здоров’я", "icon": "🩺",
+        "summary": "Працювати в командах, що допомагають людям зберігати здоров’я та відновлюватися.",
+        "professions": [
+            {"title": "Лікар", "icon": "🩺", "day": "Збирає інформацію про стан пацієнта, пояснює варіанти допомоги й співпрацює з іншими фахівцями.", "skills": "природничі науки, уважне спілкування, відповідальність, тривале навчання", "try": "Підготуй список нейтральних запитань, які допоможуть людині описати самопочуття."},
+            {"title": "Фізичний терапевт", "icon": "🏃", "day": "Разом із людиною та медичною командою планує вправи для руху й відновлення за професійними рекомендаціями.", "skills": "анатомія, рух, спостереження, підтримувальна комунікація", "try": "Склади безпечну розминку з трьох легких рухів без змагання на швидкість."},
+            {"title": "Медичний лабораторний фахівець", "icon": "🔬", "day": "Працює за лабораторними протоколами, уважно опрацьовує зразки та передає результати команді.", "skills": "біологія, хімія, точність, правила безпеки", "try": "Знайди в таблиці, чому контроль і підпис зразка важливі для точного результату."}
+        ]
+    },
+    {
+        "slug": "education", "parent": "people", "name": "Освіта, психологія й підтримка", "icon": "📚",
+        "summary": "Допомагати людям навчатися, розуміти себе й знаходити потрібну підтримку.",
+        "professions": [
+            {"title": "Учитель", "icon": "📚", "day": "Планує уроки, пояснює матеріал різними способами та помічає, що допомагає учням просуватися.", "skills": "предметні знання, ясне мовлення, терпіння, організація", "try": "Поясни молодшому учневі правило на прикладі з повсякденного життя."},
+            {"title": "Психолог", "icon": "🧠", "day": "Працює в межах професійної підготовки й етичних правил, слухає людей і допомагає визначити доступні кроки підтримки.", "skills": "психологія, етика, уважне слухання, дотримання меж", "try": "Сформулюй підтримувальну фразу для друга, який хвилюється перед контрольною."},
+            {"title": "Кар’єрний освітній радник", "icon": "🧭", "day": "Допомагає учням досліджувати інтереси, знайомитися з професіями й порівнювати освітні маршрути.", "skills": "комунікація, джерела інформації, планування, повага до вибору учня", "try": "Порівняй дві професії за щоденними завданнями, а не лише за назвою."}
+        ]
+    },
+    {
+        "slug": "public", "parent": "people", "name": "Право, громада й публічна служба", "icon": "⚖️",
+        "summary": "Допомагати людям розуміти правила, відстоювати права й покращувати послуги громади.",
+        "professions": [
+            {"title": "Юрист", "icon": "⚖️", "day": "Аналізує документи й правила, пояснює можливі кроки та працює в межах професійної кваліфікації.", "skills": "читання, аргументація, уважність до деталей, етика", "try": "Знайди в шкільному правилі твердження, право й відповідальний крок."},
+            {"title": "Медіатор", "icon": "🤝", "day": "Організовує безпечну розмову, щоб сторони почули одна одну й самі шукали взаємоприйнятне рішення.", "skills": "слухання, нейтральність, чіткі запитання, повага", "try": "Перефразуй дві різні думки так, щоб обидві сторони впізнали свою позицію."},
+            {"title": "Фахівець місцевого самоврядування", "icon": "🏛️", "day": "Допомагає організовувати публічні послуги, опрацьовувати звернення й пояснювати рішення громади.", "skills": "комунікація, робота з даними, право, планування", "try": "Визнач, які три дані потрібні, щоб спланувати безпечний перехід біля школи."}
+        ]
+    },
+    {
+        "slug": "design", "parent": "creative", "name": "Дизайн, архітектура й 3D", "icon": "🎨",
+        "summary": "Перетворювати потреби людей на зрозумілі, красиві й зручні візуальні рішення.",
+        "professions": [
+            {"title": "UX-дизайнер", "icon": "🧩", "day": "Досліджує потреби користувачів, створює макети й перевіряє, чи легко людям користуватися продуктом.", "skills": "спостереження, прототипування, візуальне мислення, співпраця", "try": "Намалюй екран розкладу, де легко знайти час і кабінет уроку."},
+            {"title": "3D-художник", "icon": "🌀", "day": "Створює цифрові об’єкти, матеріали й освітлення для ігор, анімації, навчання чи візуалізації.", "skills": "просторове мислення, композиція, цифрові інструменти, практика", "try": "Склади з простих фігур модель предмета й продумай, звідки падає світло."},
+            {"title": "Архітектор", "icon": "🏛️", "day": "Розробляє концепцію простору, креслення та узгоджує рішення з інженерами й замовниками.", "skills": "геометрія, композиція, креслення, доступність", "try": "Спроєктуй місце для читання з проходом для різних способів пересування."}
+        ]
+    },
+    {
+        "slug": "media", "parent": "creative", "name": "Медіа, журналістика й комунікації", "icon": "🎙️",
+        "summary": "Перевіряти інформацію та розповідати історії текстом, звуком і відео.",
+        "professions": [
+            {"title": "Журналіст", "icon": "🎙️", "day": "Шукає надійні джерела, ставить запитання, звіряє факти й готує зрозумілий матеріал.", "skills": "письмо, критичне мислення, перевірка джерел, відповідальність", "try": "Напиши три запитання, які допоможуть перевірити повідомлення про подію."},
+            {"title": "Відеомонтажер", "icon": "🎬", "day": "Добирає кадри, звук і темп, щоб історія була зрозумілою та не спотворювала зміст.", "skills": "уважність, ритм, монтажні інструменти, авторське право", "try": "Розклади три кадри так, щоб глядач зрозумів початок, дію й результат."},
+            {"title": "Звукорежисер", "icon": "🎚️", "day": "Записує та змішує звук для відео, музики, вистав або подкастів.", "skills": "слух, технічна цікавість, точність, командна робота", "try": "Запиши, які звуки створюють настрій у короткій сцені, не використовуючи музику."}
+        ]
+    },
+    {
+        "slug": "business", "parent": "business", "name": "Бізнес, фінанси й підприємництво", "icon": "📈",
+        "summary": "Планувати ресурси, перевіряти ідеї та пояснювати рішення на основі даних.",
+        "professions": [
+            {"title": "Фінансовий аналітик", "icon": "📈", "day": "Порівнює показники, перевіряє припущення й готує зрозумілі висновки для команди.", "skills": "математика, таблиці, уважність, пояснення невизначеності", "try": "Розподіли умовний бюджет між потребами й поясни, що ти врахував/врахувала."},
+            {"title": "Підприємець", "icon": "💡", "day": "З’ясовує потребу людей, перевіряє ідею невеликим дослідом і планує ресурси та відповідальність.", "skills": "ініціативність, спілкування, планування, готовність вчитися на відгуках", "try": "Придумай шкільну послугу й запитай трьох людей, чи була б вона їм корисна."},
+            {"title": "Менеджер продукту", "icon": "🗂️", "day": "Допомагає команді визначити проблему, розставити пріоритети й перевірити користь нового рішення.", "skills": "аналіз, комунікація, організація, розуміння користувачів", "try": "Обери одну функцію для шкільного застосунку й поясни, кому вона допоможе."}
+        ]
+    },
+    {
+        "slug": "logistics", "parent": "business", "name": "Транспорт, логістика й міський простір", "icon": "🚆",
+        "summary": "Організовувати переміщення людей і речей та робити маршрути зручнішими.",
+        "professions": [
+            {"title": "Логіст", "icon": "🚚", "day": "Планує маршрути, запаси й графіки, щоб потрібні речі прибули без зайвих затримок.", "skills": "географія, планування, таблиці, розв’язання проблем", "try": "Проклади маршрут для трьох зупинок так, щоб не повертатися двічі на ту саму вулицю."},
+            {"title": "Міський планувальник", "icon": "🏙️", "day": "Досліджує, як мешканці рухаються містом, і пропонує безпечніші громадські простори.", "skills": "карти, дизайн, аналіз потреб громади, командна робота", "try": "Познач на плані району місця, де потрібні тінь, тротуар або перехід."},
+            {"title": "Інженер транспорту", "icon": "🚦", "day": "Аналізує потоки руху, зупинки й безпеку та допомагає покращувати транспортні системи.", "skills": "математика, фізика, карти, системне мислення", "try": "Порахуй, як зміниться час очікування, якщо автобуси ходитимуть частіше."}
+        ]
+    },
+    {
+        "slug": "agriculture", "parent": "health", "name": "Аграрна справа, тварини й харчові системи", "icon": "🌱",
+        "summary": "Поєднувати природничі знання, технології та турботу про живі системи.",
+        "professions": [
+            {"title": "Агроном", "icon": "🌾", "day": "Спостерігає за станом ґрунту й рослин, радить, як вирощувати культури ощадно та безпечно.", "skills": "біологія, ґрунти, дані, відповідальне використання ресурсів", "try": "Порівняй, які умови потрібні двом рослинам для росту за спостереженнями."},
+            {"title": "Ветеринарний лікар", "icon": "🐾", "day": "Оглядає тварин, пояснює догляд і працює за професійними правилами та кваліфікацією.", "skills": "біологія, уважність, комунікація, відповідальність", "try": "Склади список безпечних запитань про догляд за домашньою твариною."},
+            {"title": "Фахівець із якості харчових продуктів", "icon": "🥛", "day": "Перевіряє процеси й документацію, щоб виробництво харчів відповідало стандартам безпеки.", "skills": "хімія, біологія, точність, дотримання процедур", "try": "Знайди на етикетці склад продукту, дату та умови зберігання."}
+        ]
+    },
+    {
+        "slug": "hospitality", "parent": "practical", "name": "Кулінарія, гостинність і туризм", "icon": "🍽️",
+        "summary": "Створювати якісний сервіс, їжу й маршрути для людей.",
+        "professions": [
+            {"title": "Кухар", "icon": "👩‍🍳", "day": "Планує підготовку страв, працює з продуктами й дотримується технології та правил безпеки.", "skills": "послідовність, смак, організація, гігієна", "try": "Склади короткий план приготування перекусу, не використовуючи ніж або нагрівання."},
+            {"title": "Організатор подій", "icon": "🎟️", "day": "Координує місце, час, людей та доступність події й планує запасні рішення.", "skills": "комунікація, планування, увага до деталей, співпраця", "try": "Склади список трьох справ для шкільної виставки й розподіли ролі."},
+            {"title": "Гід", "icon": "🧭", "day": "Готує маршрути, перевіряє факти про місцевість і розповідає історії різним групам відвідувачів.", "skills": "історія, мовлення, орієнтування, робота з аудиторією", "try": "Підготуй хвилинну розповідь про цікаве місце у своїй громаді, перевіривши джерела."}
+        ]
+    },
+    {
+        "slug": "crafts", "parent": "practical", "name": "Майстерність, виробництво й будівництво", "icon": "🛠️",
+        "summary": "Створювати, встановлювати й ремонтувати речі, дотримуючись креслень та безпеки.",
+        "professions": [
+            {"title": "Електрик", "icon": "💡", "day": "Монтує й перевіряє електричні системи за правилами безпеки та відповідною кваліфікацією.", "skills": "схеми, фізика, точність, суворе дотримання безпеки", "try": "На папері знайди розрив у простій схемі. Не торкайся справжніх дротів чи розеток."},
+            {"title": "Технік промислової автоматизації", "icon": "⚙️", "day": "Обслуговує датчики й обладнання, шукає причини збоїв і перевіряє системи за інструкціями.", "skills": "електроніка, механіка, пошук несправностей, безпека", "try": "Уяви, що датчик не передає сигнал: склади три безпечні перевірки на схемі."},
+            {"title": "Тесляр або мебляр", "icon": "🪚", "day": "Читає креслення, підбирає матеріали й створює або ремонтує вироби з дерева.", "skills": "просторове мислення, вимірювання, точність, безпечна робота", "try": "Намалюй простий органайзер і підпиши його розміри."}
+        ]
+    },
+    {
+        "slug": "sport", "parent": "health", "name": "Спорт, рух і добробут", "icon": "🏅",
+        "summary": "Розвивати рухові навички, командну взаємодію та безпечну активність.",
+        "professions": [
+            {"title": "Тренер", "icon": "🏅", "day": "Планує тренування, пояснює техніку, спостерігає за навантаженням і підтримує команду.", "skills": "рух, педагогіка, мотивація, безпека", "try": "Склади план короткої розминки й передбач час для відпочинку."},
+            {"title": "Спортивний аналітик", "icon": "📈", "day": "Порівнює дані матчів і тренувань, щоб команда краще розуміла закономірності та прогрес.", "skills": "статистика, таблиці, спорт, зрозуміле пояснення", "try": "Порівняй два набори умовних результатів і знайди, що змінилося."},
+            {"title": "Фахівець із фізичної активності", "icon": "🎽", "day": "Допомагає планувати доступні рухові заняття для різних груп і підтримує безпечну участь.", "skills": "рух, організація, комунікація, інклюзивність", "try": "Придумай рухливу перерву, у якій кожен може обрати комфортний темп."}
+        ]
+    }
+]
+
+
 CAREER_QUESTION_PROMPTS = [
     "Яке завдання тобі найцікавіше взятися виконувати?",
     "Яку роль ти найчастіше обираєш у командному проєкті?",
@@ -1401,6 +1533,54 @@ def career_guide():
           <p>Подивись на освітні шляхи після 9-го й 12-го класу, а потім пройди тест із 12 запитань. Він підкаже, які напрями й професії можуть тобі відгукнутися.</p>
         </section>
 
+        <section class="career-atlas" data-career-atlas aria-labelledby="career-atlas-title">
+          <div class="career-atlas-heading">
+            <div><p class="eyebrow">АТЛАС ПРОФЕСІЙ · 3D ДОСЛІДЖЕННЯ</p><h2 id="career-atlas-title">Побач, як може виглядати робота</h2><p>Обирай професію, розглядай щоденні задачі та спробуй короткий мінікрок. Це знайомство зі сферами, а не прогноз того, ким ти маєш стати.</p></div>
+            <div class="career-atlas-count"><strong>14</strong><span>напрямків</span><strong>42</strong><span>професії</span></div>
+          </div>
+          <div class="career-research-cards" aria-label="Що важливо знати про профорієнтацію">
+            <article class="career-research-card"><span class="career-research-icon">🧭</span><h3>Це дослідження, а не вирок</h3><p>МОН радить співвідносити інтереси, здібності й досвід із різними професіями та освітніми шляхами. Спробуй кілька напрямів і подивись, що тобі підходить.</p></article>
+            <article class="career-research-card"><span class="career-research-icon">🧠</span><h3>Поєднуй навички</h3><p>В огляді роботодавців WEF за 2025 рік зростають у значущості технологічна грамотність, ШІ й дані, але також аналітичне та творче мислення, гнучкість і взаємодія.</p></article>
+            <article class="career-research-card"><span class="career-research-icon">🌍</span><h3>Світ професій широкий</h3><p>Європейський каталог ESCO описує понад 3 000 професій і пов’язує їх із відповідними знаннями та вміннями. Тут — добірка для першого знайомства.</p></article>
+          </div>
+          <div class="career-atlas-sources"><span>Джерела:</span>
+            <a href="https://mon.gov.ua/news/u-shkolakh-dopomahatymut-uchniam-obraty-maibutniu-profesiiu-mon-spilno-z-partneramy-rozvyvaie-systemu-kariernoi-osvity" target="_blank" rel="noopener">МОН про кар’єрну освіту ↗</a>
+            <a href="https://esco.ec.europa.eu/uk/classification/occupation" target="_blank" rel="noopener">Каталог професій ESCO ↗</a>
+            <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/3-skills-outlook" target="_blank" rel="noopener">Огляд навичок WEF 2025 ↗</a>
+          </div>
+          <div class="career-atlas-controls">
+            <label class="career-search-label">Знайти професію або напрям<input type="search" data-career-search placeholder="Наприклад, архітектор або природа" autocomplete="off"></label>
+            <label class="career-filter-label">Фільтр напрямів<select data-career-filter><option value="">Усі напрямки</option>{% for direction in career_directions %}<option value="{{ direction.slug }}">{{ direction.name }}</option>{% endfor %}</select></label>
+          </div>
+          <p class="career-atlas-status" data-career-status aria-live="polite">14 напрямків · 42 професії</p>
+          <div class="career-atlas-grid" data-career-list>
+            {% for direction in career_directions %}
+            <details class="career-direction" data-career-card data-direction="{{ direction.slug }}" data-search="{{ direction.name }} {{ direction.summary }} {% for profession in direction.professions %}{{ profession.title }} {% endfor %}">
+              <summary><div class="career-scene" data-scene="{{ direction.slug }}" aria-hidden="true"><span class="career-scene-orbit"></span><span class="career-scene-orbit career-scene-orbit-two"></span><span class="career-scene-block"></span><span class="career-scene-spark">✦</span><span class="career-scene-core">{{ direction.icon }}</span><span class="career-scene-floor"></span></div>
+                <span class="career-direction-copy"><span class="eyebrow">{{ "%02d"|format(loop.index) }} · {{ direction.professions|length }} ПРОФЕСІЇ</span><strong>{{ direction.name }}</strong><span>{{ direction.summary }}</span><span class="career-direction-open">Розгорнути професії <span aria-hidden="true">＋</span></span></span></summary>
+              <div class="career-role-list">{% for profession in direction.professions %}
+                <button class="career-role-button" type="button" data-career-role data-title="{{ profession.title }}" data-day="{{ profession.day }}" data-skills="{{ profession.skills }}" data-try="{{ profession.try }}" data-icon="{{ profession.icon }}" data-scene="{{ direction.slug }}" data-after9="{{ career_categories[direction.parent].after9 }}" data-after12="{{ career_categories[direction.parent].after12 }}">
+                  <span class="career-role-icon" aria-hidden="true">{{ profession.icon }}</span><span class="career-role-name">{{ profession.title }}</span><span class="career-role-open">3D-презентація ↗</span>
+                </button>{% endfor %}
+              </div>
+            </details>{% endfor %}
+          </div>
+          <p class="career-atlas-empty" data-career-empty hidden>За цим запитом нічого не знайшлося. Спробуй інше слово.</p>
+        </section>
+
+        <dialog class="career-presentation" data-career-dialog aria-labelledby="career-modal-title">
+          <div class="career-presentation-inner">
+            <button class="career-presentation-close" type="button" data-career-close aria-label="Закрити презентацію">×</button>
+            <div class="career-presentation-scene" data-modal-scene="digital" aria-hidden="true"><span class="career-presentation-orbit"></span><span class="career-presentation-orbit career-presentation-orbit-b"></span><span class="career-presentation-cube"></span><span class="career-presentation-cube career-presentation-cube-b">✦</span><span class="career-presentation-icon" data-modal-icon>💻</span><span class="career-presentation-platform"></span></div>
+            <div class="career-presentation-content"><p class="eyebrow">ПРОФЕСІЯ · 3D ПРЕЗЕНТАЦІЯ</p><h2 id="career-modal-title" data-modal-title></h2>
+              <section><h3>Що може бути у робочому дні</h3><p data-modal-day></p></section><section><h3>Що корисно розвивати</h3><p data-modal-skills></p></section>
+              <section class="career-try-box"><h3>Спробуй за 3 хвилини</h3><p data-modal-try></p><small>Можна виконати на папері або подумки. Не потрібні спеціальні інструменти чи особисті дані.</small></section>
+              <div class="career-modal-paths"><section><h3>Можливий шлях після 9 класу</h3><p data-modal-after9></p></section><section><h3>Можливий шлях після 12 класу</h3><p data-modal-after12></p></section></div>
+              <p class="career-modal-note">Це загальний приклад, а не повний посадовий опис. Вимоги залежать від конкретної спеціальності й країни; для регульованих професій перевіряй офіційні правила освіти та кваліфікації.</p>
+            </div>
+          </div>
+        </dialog>
+
         <section class="career-results" aria-labelledby="career-tasters-title">
           <p class="eyebrow">ПЕРЕВІР НА ПРАКТИЦІ</p><h2 id="career-tasters-title">Спробуй мініпрофесію за 5 хвилин</h2>
           <p>Це маленькі симуляції для цікавості, а не оцінювання здібностей. Відповіді залишаються у цьому браузері.</p>
@@ -1477,9 +1657,12 @@ def career_guide():
           <a href="https://mon.gov.ua/osvita-2/vishcha-osvita-ta-osvita-doroslikh/vstupna-kampaniia-do-zvo/vstupna-kampaniia-do-zakladiv-vyshchoi-osvity-2026-roku/poriadok-pryiomu-dlia-zdobuttia-vyshchoi-osvity-v-2026-rotsi" target="_blank" rel="noopener">Правила вступу до університетів ↗</a>
         </div>
         <aside class="note"><span>ℹ️</span><p>Профорієнтаційний тест не визначає майбутнє та не замінює розмову з фахівцем. Навчальні траєкторії й правила вступу залежать від року, програми закладу та місцевої мережі. Перевіряй актуальну інформацію в закладі освіти й на сайтах МОН та ЄДЕБО.</p></aside>
+        <script>(()=>{const root=document.querySelector('[data-career-atlas]');if(!root)return;const cards=[...root.querySelectorAll('[data-career-card]')],search=root.querySelector('[data-career-search]'),filter=root.querySelector('[data-career-filter]'),status=root.querySelector('[data-career-status]'),empty=root.querySelector('[data-career-empty]'),dialog=document.querySelector('[data-career-dialog]');let returnFocus=null;function update(){const query=search.value.trim().toLocaleLowerCase('uk');let shown=0,roles=0;cards.forEach(card=>{const matchesText=!query||card.dataset.search.toLocaleLowerCase('uk').includes(query),matchesDirection=!filter.value||card.dataset.direction===filter.value,visible=matchesText&&matchesDirection;card.hidden=!visible;if(visible){shown++;roles+=card.querySelectorAll('[data-career-role]').length;if(query)card.open=true}});status.textContent=shown+' напрямків · '+roles+' професій';empty.hidden=shown>0}search.addEventListener('input',update);filter.addEventListener('change',update);root.addEventListener('click',event=>{const button=event.target.closest('[data-career-role]');if(!button)return;returnFocus=button;for(const key of ['title','day','skills','try','after9','after12'])dialog.querySelector('[data-modal-'+key+']').textContent=button.dataset[key];dialog.querySelector('[data-modal-icon]').textContent=button.dataset.icon;dialog.querySelector('[data-modal-scene]').dataset.modalScene=button.dataset.scene;dialog.showModal();dialog.querySelector('[data-career-close]').focus()});dialog.querySelector('[data-career-close]').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(returnFocus?.isConnected)returnFocus.focus()});update()})();</script>
         <script>(()=>{const root=document.querySelector('[data-career-tasters]');if(!root)return;const key='rozumnyk-career-tasters-v1';let done={};try{done=JSON.parse(localStorage.getItem(key)||'{}')}catch(_){}function mark(card){card.classList.add('is-complete');done[card.dataset.taster]=true;try{localStorage.setItem(key,JSON.stringify(done))}catch(_){}}root.querySelectorAll('[data-taster]').forEach(card=>{if(done[card.dataset.taster])card.classList.add('is-complete')});root.addEventListener('click',event=>{const button=event.target.closest('[data-taster-action]');if(!button)return;const card=button.closest('[data-taster]'),out=card.querySelector('[data-taster-output]'),action=button.dataset.tasterAction;if(action==='average'){out.textContent='Середній час — 15 хвилин: (12 + 17 + 15 + 16) ÷ 4.';mark(card)}if(action==='experiment'){const value=card.querySelector('[data-variable]').value;out.textContent=value==='temperature'?'Так! Змінюй температуру, а кількість води, цукру й перемішування залиш однаковими.':value?'У чесному порівнянні змінюй одну умову й тримай інші однаковими. Спробуй температуру води.':'Спершу обери змінну.';if(value==='temperature')mark(card)}if(action==='explain'){const text=card.querySelector('[data-explanation]').value.trim();out.textContent=!text?'Додай своє пояснення.':text.length<35?'Додай приклад і поясни, що означають числа.':'Гарний початок! Переконайся, що є правило й приклад: 4 × 3 = 12 кв. од.';if(text.length>=35)mark(card)}if(action==='circuit'){const value=card.querySelector('[data-circuit-answer]').value;out.textContent=value==='open'?'Саме так: розімкнене коло не має повного шляху для струму.':'Перевір, чи шлях між джерелом і лампою замкнений. Це цифрова модель, працювати зі справжньою електрикою не потрібно.';if(value==='open')mark(card)}});const palette=root.querySelector('[data-palette]'),preview=root.querySelector('[data-palette-preview]');function paint(){const colors={mint:['#ddf5e7','#3d755f'],violet:['#eee6ff','#62439a'],sun:['#fff0c4','#96631a']},pair=colors[palette.value];preview.style.background='linear-gradient(120deg,'+pair[0]+',#fff)';preview.style.color=pair[1];preview.textContent='Обраний настрій — '+palette.options[palette.selectedIndex].text.toLowerCase()+'.';mark(root.querySelector('[data-taster="designer"]'))}palette.addEventListener('change',paint);const budgets=[...root.querySelectorAll('[data-budget]')],budgetOut=root.querySelector('[data-budget-output]');function total(){const sum=budgets.reduce((acc,input)=>acc+(Number(input.value)||0),0);budgetOut.textContent='Разом: '+sum+' із 1000. '+(sum===1000?'Бюджет збалансований.':sum<1000?'Залишилося '+(1000-sum)+'.':'Перевищення — '+(sum-1000)+'.');if(sum===1000)mark(root.querySelector('[data-taster="entrepreneur"]'))}budgets.forEach(input=>input.addEventListener('input',total));total()})();</script>
         """,
         grade=active_grade(),
+        career_directions=CAREER_3D_DIRECTIONS,
+        career_categories=CAREER_CATEGORIES,
         stage=stage,
         questions=questions,
         results=results,
