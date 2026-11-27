@@ -5,3 +5,10 @@ __pycache__/
 .env
 .venv/
 .demo_seeded
+node_modules/
+dist/
+.wrangler/
+web/public/data/catalog.json
+web/public/data/careers.json
+web/public/data/subjects/
+functions/data/answers.json
